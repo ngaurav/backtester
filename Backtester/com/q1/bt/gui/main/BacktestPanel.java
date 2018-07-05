@@ -809,6 +809,8 @@
 /*  803 */       .toString());
 /*  804 */     SlippageModel defaultSlippageModel = this.btGlobal.loginParameter.getDefaultSlippageModel();
 /*  805 */     this.slippageModelComboBox.setSelectedItem(defaultSlippageModel);
+/*  806 */     RolloverMethod rolloverMethod = this.btGlobal.loginParameter.getDefaultRolloverMethod();
+/*  807 */     this.rolloverMethodComboBox.setSelectedItem(rolloverMethod);
 /*      */   }
 /*      */   
 /*      */ 
@@ -816,222 +818,222 @@
 /*      */ 
 /*      */   public void setDataAndStrategiesToTables()
 /*      */   {
-/*  813 */     String dataLocation = this.btGlobal.loginParameter.getDataPath();
+/*  815 */     String dataLocation = this.btGlobal.loginParameter.getDataPath();
 /*      */     
-/*  815 */     HashMap<String, String> scrips = new HashMap();
+/*  817 */     HashMap<String, String> scrips = new HashMap();
 /*      */     
-/*  817 */     File dataFolder = new File(dataLocation);
-/*  818 */     File[] dataFiles = dataFolder.listFiles();
+/*  819 */     File dataFolder = new File(dataLocation);
+/*  820 */     File[] dataFiles = dataFolder.listFiles();
 /*      */     
 /*      */ 
-/*  821 */     DefaultTableModel scripModel = (DefaultTableModel)this.singleScripTable
-/*  822 */       .getModel();
+/*  823 */     DefaultTableModel scripModel = (DefaultTableModel)this.singleScripTable
+/*  824 */       .getModel();
 /*      */     
 /*      */     File[] arrayOfFile1;
-/*  825 */     int j = (arrayOfFile1 = dataFiles).length; for (int i = 0; i < j; i++) { File folder = arrayOfFile1[i];
+/*  827 */     int j = (arrayOfFile1 = dataFiles).length; for (int i = 0; i < j; i++) { File folder = arrayOfFile1[i];
 /*      */       
 /*      */ 
-/*  828 */       String curLocation = dataLocation + "\\" + folder.getName();
-/*  829 */       File curFolder = new File(curLocation);
-/*  830 */       File[] files = curFolder.listFiles();
+/*  830 */       String curLocation = dataLocation + "\\" + folder.getName();
+/*  831 */       File curFolder = new File(curLocation);
+/*  832 */       File[] files = curFolder.listFiles();
 /*      */       
 /*      */       File[] arrayOfFile2;
-/*  833 */       int m = (arrayOfFile2 = files).length; for (int k = 0; k < m; k++) { File file = arrayOfFile2[k];
-/*  834 */         String[] fileVal = file.getName().split("\\.")[0].split(" ");
-/*  835 */         if ((folder.getName().equalsIgnoreCase("MD")) || 
-/*  836 */           (folder.getName().equalsIgnoreCase("DMD")) || 
-/*  837 */           (folder.getName().equalsIgnoreCase("PP")))
+/*  835 */       int m = (arrayOfFile2 = files).length; for (int k = 0; k < m; k++) { File file = arrayOfFile2[k];
+/*  836 */         String[] fileVal = file.getName().split("\\.")[0].split(" ");
+/*  837 */         if ((folder.getName().equalsIgnoreCase("MD")) || 
+/*  838 */           (folder.getName().equalsIgnoreCase("DMD")) || 
+/*  839 */           (folder.getName().equalsIgnoreCase("PP")))
 /*      */         {
 /*      */ 
-/*  840 */           String key = fileVal[0] + " " + fileVal[1] + " " + 
-/*  841 */             fileVal[2] + " " + fileVal[3] + " CC";
-/*  842 */           String curType = "";
-/*  843 */           curType = (String)scrips.get(key);
-/*  844 */           if (curType != null) {
-/*  845 */             scrips.put(key, curType + "," + fileVal[4]);
+/*  842 */           String key = fileVal[0] + " " + fileVal[1] + " " + 
+/*  843 */             fileVal[2] + " " + fileVal[3] + " CC";
+/*  844 */           String curType = "";
+/*  845 */           curType = (String)scrips.get(key);
+/*  846 */           if (curType != null) {
+/*  847 */             scrips.put(key, curType + "," + fileVal[4]);
 /*      */           }
 /*      */           
-/*  848 */           key = 
-/*  849 */             fileVal[0] + " " + fileVal[1] + " " + fileVal[2] + " " + fileVal[3] + " IC";
-/*  850 */           curType = "";
-/*  851 */           curType = (String)scrips.get(key);
-/*  852 */           if (curType != null) {
-/*  853 */             scrips.put(key, curType + "," + fileVal[4]);
+/*  850 */           key = 
+/*  851 */             fileVal[0] + " " + fileVal[1] + " " + fileVal[2] + " " + fileVal[3] + " IC";
+/*  852 */           curType = "";
+/*  853 */           curType = (String)scrips.get(key);
+/*  854 */           if (curType != null) {
+/*  855 */             scrips.put(key, curType + "," + fileVal[4]);
 /*      */           } else {
-/*  855 */             scrips.put(key, fileVal[4]);
+/*  857 */             scrips.put(key, fileVal[4]);
 /*      */           }
-/*  857 */         } else if (folder.getName().equalsIgnoreCase("CC")) {
-/*  858 */           String key = fileVal[0] + " " + fileVal[1] + " " + 
-/*  859 */             fileVal[2] + " " + fileVal[3] + " " + 
-/*  860 */             folder.getName();
-/*  861 */           String curType = "";
-/*  862 */           curType = (String)scrips.get(key);
-/*  863 */           if (curType == null) {
-/*  864 */             scrips.put(key, fileVal[4]);
+/*  859 */         } else if (folder.getName().equalsIgnoreCase("CC")) {
+/*  860 */           String key = fileVal[0] + " " + fileVal[1] + " " + 
+/*  861 */             fileVal[2] + " " + fileVal[3] + " " + 
+/*  862 */             folder.getName();
+/*  863 */           String curType = "";
+/*  864 */           curType = (String)scrips.get(key);
+/*  865 */           if (curType == null) {
+/*  866 */             scrips.put(key, fileVal[4]);
 /*      */           } else
-/*  866 */             scrips.put(key, curType + "," + fileVal[4]);
-/*  867 */         } else if (folder.getName().equalsIgnoreCase("IC")) {
-/*  868 */           String key = fileVal[0] + " " + fileVal[1] + " " + 
-/*  869 */             fileVal[2] + " " + fileVal[3] + " " + 
-/*  870 */             folder.getName();
-/*  871 */           String curType = "";
-/*  872 */           curType = (String)scrips.get(key);
-/*  873 */           if (curType == null) {
-/*  874 */             scrips.put(key, fileVal[4]);
+/*  868 */             scrips.put(key, curType + "," + fileVal[4]);
+/*  869 */         } else if (folder.getName().equalsIgnoreCase("IC")) {
+/*  870 */           String key = fileVal[0] + " " + fileVal[1] + " " + 
+/*  871 */             fileVal[2] + " " + fileVal[3] + " " + 
+/*  872 */             folder.getName();
+/*  873 */           String curType = "";
+/*  874 */           curType = (String)scrips.get(key);
+/*  875 */           if (curType == null) {
+/*  876 */             scrips.put(key, fileVal[4]);
 /*      */           } else {
-/*  876 */             scrips.put(key, curType + "," + fileVal[4]);
+/*  878 */             scrips.put(key, curType + "," + fileVal[4]);
 /*      */           }
 /*      */         }
 /*      */       }
 /*      */     }
-/*  881 */     for (Map.Entry<String, String> entry : scrips.entrySet()) {
-/*  882 */       String[] scripVal = ((String)entry.getKey()).split(" ");
-/*  883 */       String dataTypes = (String)entry.getValue();
-/*  884 */       dataTypes = refineDatatypes(dataTypes);
-/*  885 */       if (dataTypes != null)
+/*  883 */     for (Map.Entry<String, String> entry : scrips.entrySet()) {
+/*  884 */       String[] scripVal = ((String)entry.getKey()).split(" ");
+/*  885 */       String dataTypes = (String)entry.getValue();
+/*  886 */       dataTypes = refineDatatypes(dataTypes);
+/*  887 */       if (dataTypes != null)
 /*      */       {
-/*  887 */         Object[] scripObj = { scripVal[0], scripVal[1], scripVal[2], 
-/*  888 */           scripVal[3], scripVal[4], dataTypes };
-/*  889 */         scripModel.addRow(scripObj);
+/*  889 */         Object[] scripObj = { scripVal[0], scripVal[1], scripVal[2], 
+/*  890 */           scripVal[3], scripVal[4], dataTypes };
+/*  891 */         scripModel.addRow(scripObj);
 /*      */       }
 /*      */     }
 /*      */     try
 /*      */     {
-/*  894 */       this.btGlobal.addPackagetoDataTable(
-/*  895 */         this.btGlobal.packageParameter.getScripListPackage(), 
-/*  896 */         this.multiScripTable);
+/*  896 */       this.btGlobal.addPackagetoDataTable(
+/*  897 */         this.btGlobal.packageParameter.getScripListPackage(), 
+/*  898 */         this.multiScripTable);
 /*      */     } catch (Exception e) {
-/*  898 */       this.btGlobal.displayMessage("Error Getting Scriplist from Package");
-/*  899 */       e.printStackTrace();
+/*  900 */       this.btGlobal.displayMessage("Error Getting Scriplist from Package");
+/*  901 */       e.printStackTrace();
 /*      */     }
 /*      */   }
 /*      */   
 /*      */   public String refineDatatypes(String dataTypes) {
-/*  904 */     String[] all = dataTypes.split(",");
-/*  905 */     String outDatatype = null;
+/*  906 */     String[] all = dataTypes.split(",");
+/*  907 */     String outDatatype = null;
 /*      */     String[] arrayOfString1;
-/*  907 */     int j = (arrayOfString1 = all).length; for (int i = 0; i < j; i++) { String d = arrayOfString1[i];
-/*  908 */       if (d.equals("1M")) {
-/*  909 */         outDatatype = d;
+/*  909 */     int j = (arrayOfString1 = all).length; for (int i = 0; i < j; i++) { String d = arrayOfString1[i];
+/*  910 */       if (d.equals("1M")) {
+/*  911 */         outDatatype = d;
 /*      */       }
 /*      */     }
-/*  912 */     j = (arrayOfString1 = all).length; for (i = 0; i < j; i++) { String d = arrayOfString1[i];
-/*  913 */       if (d.equals("1D")) {
-/*  914 */         if (outDatatype != null) {
-/*  915 */           outDatatype = outDatatype + "," + d;
+/*  914 */     j = (arrayOfString1 = all).length; for (i = 0; i < j; i++) { String d = arrayOfString1[i];
+/*  915 */       if (d.equals("1D")) {
+/*  916 */         if (outDatatype != null) {
+/*  917 */           outDatatype = outDatatype + "," + d;
 /*      */         } else
-/*  917 */           outDatatype = d;
+/*  919 */           outDatatype = d;
 /*      */       }
 /*      */     }
-/*  920 */     if (outDatatype == null) {
-/*  921 */       return outDatatype;
+/*  922 */     if (outDatatype == null) {
+/*  923 */       return outDatatype;
 /*      */     }
-/*  923 */     j = (arrayOfString1 = all).length; for (i = 0; i < j; i++) { String d = arrayOfString1[i];
-/*  924 */       if ((!d.equals("1D")) && (!d.equals("1M"))) {
-/*  925 */         outDatatype = outDatatype + "," + d;
+/*  925 */     j = (arrayOfString1 = all).length; for (i = 0; i < j; i++) { String d = arrayOfString1[i];
+/*  926 */       if ((!d.equals("1D")) && (!d.equals("1M"))) {
+/*  927 */         outDatatype = outDatatype + "," + d;
 /*      */       }
 /*      */     }
-/*  928 */     return outDatatype;
+/*  930 */     return outDatatype;
 /*      */   }
 /*      */   
 /*      */   public void setProgressBar(int val)
 /*      */   {
-/*  933 */     this.progressBar.setValue(val);
+/*  935 */     this.progressBar.setValue(val);
 /*      */   }
 /*      */   
 /*      */   public int getProgressBarValue()
 /*      */   {
-/*  938 */     return this.progressBar.getValue();
+/*  940 */     return this.progressBar.getValue();
 /*      */   }
 /*      */   
 /*      */   public void enableRunButton()
 /*      */   {
-/*  943 */     this.runButton.setEnabled(true);
+/*  945 */     this.runButton.setEnabled(true);
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public HashMap<String, LinkedHashMap<String, ArrayList<Scrip>>> createBacktestMap()
 /*      */     throws Exception
 /*      */   {
-/*  950 */     HashMap<String, LinkedHashMap<String, ArrayList<Scrip>>> backtestMap = new HashMap();
+/*  952 */     HashMap<String, LinkedHashMap<String, ArrayList<Scrip>>> backtestMap = new HashMap();
 /*      */     
 /*      */ 
-/*  953 */     int backtestCount = this.backtestTable.getRowCount();
+/*  955 */     int backtestCount = this.backtestTable.getRowCount();
 /*      */     
 /*      */ 
-/*  956 */     for (int i = 0; i < backtestCount; i++)
+/*  958 */     for (int i = 0; i < backtestCount; i++)
 /*      */     {
 /*      */ 
-/*  959 */       String strategyID = this.backtestTable.getValueAt(i, 0).toString();
-/*  960 */       String scripListID = this.backtestTable.getValueAt(i, 1).toString();
-/*  961 */       String[] scripListVal = scripListID.split(" ");
+/*  961 */       String strategyID = this.backtestTable.getValueAt(i, 0).toString();
+/*  962 */       String scripListID = this.backtestTable.getValueAt(i, 1).toString();
+/*  963 */       String[] scripListVal = scripListID.split(" ");
 /*      */       
 /*      */ 
-/*  964 */       ArrayList<Scrip> scripSet = new ArrayList();
+/*  966 */       ArrayList<Scrip> scripSet = new ArrayList();
 /*      */       
 /*      */ 
-/*  967 */       if (scripListVal.length == 1) {
-/*  968 */         Class<?> stratClass = Class.forName(this.btGlobal.packageParameter
-/*  969 */           .getScripListPackage() + "." + scripListID);
-/*  970 */         Constructor<?> constructor = stratClass.getConstructor(new Class[0]);
-/*  971 */         ScripList scripListObj = (ScripList)constructor.newInstance(new Object[0]);
-/*  972 */         scripSet = new ArrayList(scripListObj.scripMap.values());
+/*  969 */       if (scripListVal.length == 1) {
+/*  970 */         Class<?> stratClass = Class.forName(this.btGlobal.packageParameter
+/*  971 */           .getScripListPackage() + "." + scripListID);
+/*  972 */         Constructor<?> constructor = stratClass.getConstructor(new Class[0]);
+/*  973 */         ScripList scripListObj = (ScripList)constructor.newInstance(new Object[0]);
+/*  974 */         scripSet = new ArrayList(scripListObj.scripMap.values());
 /*      */ 
 /*      */       }
 /*      */       else
 /*      */       {
-/*  977 */         scripListID = scripListID.replace(" ", "$");
-/*  978 */         scripSet.add(new Scrip(scripListVal[0], scripListVal[1], 
-/*  979 */           scripListVal[2], scripListVal[3], scripListVal[4]));
+/*  979 */         scripListID = scripListID.replace(" ", "$");
+/*  980 */         scripSet.add(new Scrip(scripListVal[0], scripListVal[1], 
+/*  981 */           scripListVal[2], scripListVal[3], scripListVal[4]));
 /*      */       }
 /*      */       
 /*      */ 
-/*  983 */       LinkedHashMap<String, ArrayList<Scrip>> scripListMap = 
-/*  984 */         (LinkedHashMap)backtestMap.get(strategyID);
-/*  985 */       if (scripListMap == null) {
-/*  986 */         scripListMap = new LinkedHashMap();
-/*  987 */         scripListMap.put(scripListID, scripSet);
-/*  988 */         backtestMap.put(strategyID, scripListMap);
+/*  985 */       LinkedHashMap<String, ArrayList<Scrip>> scripListMap = 
+/*  986 */         (LinkedHashMap)backtestMap.get(strategyID);
+/*  987 */       if (scripListMap == null) {
+/*  988 */         scripListMap = new LinkedHashMap();
+/*  989 */         scripListMap.put(scripListID, scripSet);
+/*  990 */         backtestMap.put(strategyID, scripListMap);
 /*      */       } else {
-/*  990 */         scripListMap.put(scripListID, scripSet);
-/*  991 */         backtestMap.put(strategyID, scripListMap);
+/*  992 */         scripListMap.put(scripListID, scripSet);
+/*  993 */         backtestMap.put(strategyID, scripListMap);
 /*      */       }
 /*      */     }
 /*      */     
 /*      */ 
-/*  996 */     return backtestMap;
+/*  998 */     return backtestMap;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */ 
 /*      */   public BacktestParameter createBacktestParameter()
 /*      */   {
-/* 1003 */     BacktestParameter backtestParameter = new BacktestParameter();
-/* 1004 */     backtestParameter.setStartDate(Long.parseLong(this.startDateText.getText()));
-/* 1005 */     backtestParameter.setEndDate(Long.parseLong(this.endDateText.getText()));
-/* 1006 */     backtestParameter
-/* 1007 */       .setSlippageModel((SlippageModel)this.slippageModelComboBox
-/* 1008 */       .getSelectedItem());
-/* 1009 */     backtestParameter
-/* 1010 */       .setRolloverMethod((RolloverMethod)this.rolloverMethodComboBox
-/* 1011 */       .getSelectedItem());
-/* 1012 */     backtestParameter
-/* 1013 */       .setPostProcessMode((PostProcessMode)this.postProcessModeComboBox
-/* 1014 */       .getSelectedItem());
-/* 1015 */     backtestParameter
-/* 1016 */       .setAggregationMode((AggregationMode)this.aggregationModeComboBox
-/* 1017 */       .getSelectedItem());
-/* 1018 */     backtestParameter.setSkipExistingBacktest(this.skipExistingCheck
-/* 1019 */       .isSelected());
-/* 1020 */     backtestParameter
-/* 1021 */       .setExportResultsCheck(this.exportResultsCheck.isSelected());
-/* 1022 */     backtestParameter.setDefaultParametersCheck(this.defaultParamsCheck
-/* 1023 */       .isSelected());
-/* 1024 */     backtestParameter.setGenerateOutputCheck(this.genOutputCheck.isSelected());
-/* 1025 */     backtestParameter.setOrderBookBacktest(this.orderbookBacktestCheck
-/* 1026 */       .isSelected());
+/* 1005 */     BacktestParameter backtestParameter = new BacktestParameter();
+/* 1006 */     backtestParameter.setStartDate(Long.parseLong(this.startDateText.getText()));
+/* 1007 */     backtestParameter.setEndDate(Long.parseLong(this.endDateText.getText()));
+/* 1008 */     backtestParameter
+/* 1009 */       .setSlippageModel((SlippageModel)this.slippageModelComboBox
+/* 1010 */       .getSelectedItem());
+/* 1011 */     backtestParameter
+/* 1012 */       .setRolloverMethod((RolloverMethod)this.rolloverMethodComboBox
+/* 1013 */       .getSelectedItem());
+/* 1014 */     backtestParameter
+/* 1015 */       .setPostProcessMode((PostProcessMode)this.postProcessModeComboBox
+/* 1016 */       .getSelectedItem());
+/* 1017 */     backtestParameter
+/* 1018 */       .setAggregationMode((AggregationMode)this.aggregationModeComboBox
+/* 1019 */       .getSelectedItem());
+/* 1020 */     backtestParameter.setSkipExistingBacktest(this.skipExistingCheck
+/* 1021 */       .isSelected());
+/* 1022 */     backtestParameter
+/* 1023 */       .setExportResultsCheck(this.exportResultsCheck.isSelected());
+/* 1024 */     backtestParameter.setDefaultParametersCheck(this.defaultParamsCheck
+/* 1025 */       .isSelected());
+/* 1026 */     backtestParameter.setGenerateOutputCheck(this.genOutputCheck.isSelected());
+/* 1027 */     backtestParameter.setOrderBookBacktest(this.orderbookBacktestCheck
+/* 1028 */       .isSelected());
 /*      */     
-/* 1028 */     return backtestParameter;
+/* 1030 */     return backtestParameter;
 /*      */   }
 /*      */ }
 

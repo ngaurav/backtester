@@ -16,7 +16,7 @@
 /*     */ 
 /*     */ public class BacktesterNonGUI extends Thread
 /*     */ {
-/*  19 */   private String version = "8.17";
+/*  19 */   private String version = "8.17.1";
 /*     */   
 /*     */ 
 /*     */   BacktesterGlobal btGlobal;
