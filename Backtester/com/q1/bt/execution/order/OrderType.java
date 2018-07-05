@@ -1,7 +1,7 @@
 /*    */ package com.q1.bt.execution.order;
 /*    */ import java.io.Serializable;
 /*    */ 
-/*  4 */ public enum OrderType implements Serializable { STOP(1),  LIMIT(2),  MARKET(3),  EOD(4),  OPEN(5),  OPENWITHSLIP(6),  ROLLOVER(7),  LIMITATPRICE(8),  LIMITWITHSLIP(8);
+/*  4 */ public enum OrderType implements Serializable { STOP(1),  LIMIT(2),  MARKET(3),  EOD(4),  OPEN(5),  OPENWITHSLIP(6),  ROLLOVER(7),  LIMITATPRICE(8),  LIMITWITHSLIP(9);
 /*    */   
 /*    */   private final int Val;
 /*    */   
