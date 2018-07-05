@@ -844,9 +844,9 @@
 /*  844 */       this.euroTradeCash = Double.valueOf(0.0D);
 /*      */ 
 /*      */     }
-/*  847 */     else if (this.position.longValue() * signal > 0L)
-/*      */     {
-/*  849 */       this.usedCapital = Double.valueOf(this.usedCapital.doubleValue() + capitalPrice.doubleValue() * this.exchangeRate.doubleValue() * order.quantity.longValue() / this.execData.metaData.leverage.intValue());
+/*  847 */     else if (this.position.longValue() * signal > 0L) {
+/*  848 */       this.usedCapital = 
+/*  849 */         Double.valueOf(this.usedCapital.doubleValue() + capitalPrice.doubleValue() * this.exchangeRate.doubleValue() * order.quantity.longValue() / this.execData.metaData.leverage.intValue());
 /*      */ 
 /*      */     }
 /*      */     else

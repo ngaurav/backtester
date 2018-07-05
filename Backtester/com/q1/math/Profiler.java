@@ -13,9 +13,9 @@
 /* 13 */     this.startTick = System.nanoTime();
 /*    */   }
 /*    */   
-/*    */   public void stop()
-/*    */   {
-/* 18 */     this.cumTick = Double.valueOf(this.cumTick.doubleValue() + (System.nanoTime() - this.startTick) / 1.0E9D);
+/*    */   public void stop() {
+/* 17 */     this.cumTick = Double.valueOf(this.cumTick.doubleValue() + (System.nanoTime() - this.startTick) / 
+/* 18 */       1.0E9D);
 /*    */   }
 /*    */   
 /*    */   public void printStats() {
