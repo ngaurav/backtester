@@ -43,71 +43,76 @@
 /*  43 */     this.alpha = Double.valueOf(2.0D / (periodVol.intValue() + 1.0D));
 /*     */   }
 /*     */   
+/*     */ 
 /*     */   public void updateETA(Double hi, Double lo, Double cl, Double vol, Double rolloverCl)
 /*     */   {
-/*  48 */     if (this.prevCl.doubleValue() < 0.0D) {
-/*  49 */       this.tr = Double.valueOf((hi.doubleValue() - lo.doubleValue()) / cl.doubleValue());
-/*  50 */       this.atr = this.tr;
+/*  49 */     if (this.prevCl.doubleValue() < 0.0D) {
+/*  50 */       this.tr = Double.valueOf((hi.doubleValue() - lo.doubleValue()) / cl.doubleValue());
+/*  51 */       this.atr = this.tr;
 /*     */     } else {
-/*  52 */       this.tr = Double.valueOf((MathLib.max(hi.doubleValue(), this.prevCl.doubleValue()) - MathLib.min(lo.doubleValue(), this.prevCl.doubleValue())) / cl.doubleValue());
-/*  53 */       this.atr = Double.valueOf(this.tr.doubleValue() * this.alpha.doubleValue() + this.atr.doubleValue() * (1.0D - this.alpha.doubleValue()));
+/*  53 */       this.tr = Double.valueOf((MathLib.max(hi.doubleValue(), this.prevCl.doubleValue()) - MathLib.min(lo.doubleValue(), this.prevCl.doubleValue())) / cl.doubleValue());
+/*  54 */       this.atr = Double.valueOf(this.tr.doubleValue() * this.alpha.doubleValue() + this.atr.doubleValue() * (1.0D - this.alpha.doubleValue()));
 /*     */     }
 /*     */     
-/*  56 */     if ((this.prevCl.doubleValue() > 0.0D) && (vol.doubleValue() > 0.0D)) {
-/*  57 */       Double ret = Double.valueOf(cl.doubleValue() / this.prevCl.doubleValue() - 1.0D);
-/*  58 */       this.eta = getETA(ret, vol);
+/*  57 */     if ((this.prevCl.doubleValue() > 0.0D) && (vol.doubleValue() > 0.0D)) {
+/*  58 */       Double ret = Double.valueOf(cl.doubleValue() / this.prevCl.doubleValue() - 1.0D);
+/*  59 */       this.eta = getETA(ret, vol);
 /*     */     }
-/*  60 */     this.prevCl = cl;
-/*  61 */     if (rolloverCl.doubleValue() > 0.0D) {
-/*  62 */       shiftForRO(Double.valueOf(rolloverCl.doubleValue() - cl.doubleValue()));
+/*  61 */     this.prevCl = cl;
+/*  62 */     if (rolloverCl.doubleValue() > 0.0D) {
+/*  63 */       shiftForRO(Double.valueOf(rolloverCl.doubleValue() - cl.doubleValue()));
 /*     */     }
 /*     */   }
 /*     */   
-/*     */   public double predictSlippage(Double tradeVol, Double constantSlippage)
+/*     */   public double getATRRootPhi(Double tradeVol)
 /*     */   {
-/*  68 */     if (this.XY.size() < 50) {
-/*  69 */       return constantSlippage.doubleValue();
+/*  69 */     return this.atr.doubleValue() * Math.sqrt(tradeVol.doubleValue() / (this.sumVol.doubleValue() / this.volList.size()));
+/*     */   }
+/*     */   
+/*     */   public double predictSlippage(Double tradeVol, Double constantSlippage) {
+/*  73 */     if (this.XY.size() < 50) {
+/*  74 */       return constantSlippage.doubleValue();
 /*     */     }
-/*  71 */     return this.eta.doubleValue() * this.atr.doubleValue() * Math.sqrt(tradeVol.doubleValue() / (this.sumVol.doubleValue() / this.volList.size())) * 100.0D;
+/*  76 */     return this.eta.doubleValue() * this.atr.doubleValue() * Math.sqrt(tradeVol.doubleValue() / (this.sumVol.doubleValue() / this.volList.size())) * 100.0D;
 /*     */   }
 /*     */   
 /*     */   private Double getETA(Double ret, Double vol) {
-/*  75 */     Double x = getX(ret, vol);
-/*  76 */     Double y = Double.valueOf(Math.abs(ret.doubleValue()));
-/*  77 */     Double xy = Double.valueOf(x.doubleValue() * y.doubleValue());
-/*  78 */     Double x2 = Double.valueOf(x.doubleValue() * x.doubleValue());
-/*  79 */     if (this.XY.size() < this.periodReg.intValue()) {
-/*  80 */       this.XY.add(xy);
-/*  81 */       this.sumXY = Double.valueOf(this.sumXY.doubleValue() + xy.doubleValue());
-/*  82 */       this.X2.add(x2);
-/*  83 */       this.sumX2 = Double.valueOf(this.sumX2.doubleValue() + x2.doubleValue());
+/*  80 */     Double x = getX(ret, vol);
+/*  81 */     Double y = Double.valueOf(Math.abs(ret.doubleValue()));
+/*  82 */     Double xy = Double.valueOf(x.doubleValue() * y.doubleValue());
+/*  83 */     Double x2 = Double.valueOf(x.doubleValue() * x.doubleValue());
+/*  84 */     if (this.XY.size() < this.periodReg.intValue()) {
+/*  85 */       this.XY.add(xy);
+/*  86 */       this.sumXY = Double.valueOf(this.sumXY.doubleValue() + xy.doubleValue());
+/*  87 */       this.X2.add(x2);
+/*  88 */       this.sumX2 = Double.valueOf(this.sumX2.doubleValue() + x2.doubleValue());
 /*     */     } else {
-/*  85 */       this.sumXY = Double.valueOf(this.sumXY.doubleValue() + (xy.doubleValue() - ((Double)this.XY.get(this.regIndex.intValue())).doubleValue()));
-/*  86 */       this.XY.set(this.regIndex.intValue(), xy);
-/*  87 */       this.sumX2 = Double.valueOf(this.sumX2.doubleValue() + (x2.doubleValue() - ((Double)this.X2.get(this.regIndex.intValue())).doubleValue()));
-/*  88 */       this.X2.set(this.regIndex.intValue(), x2);
-/*  89 */       this.regIndex = Integer.valueOf((this.regIndex.intValue() + 1) % this.periodReg.intValue());
+/*  90 */       this.sumXY = Double.valueOf(this.sumXY.doubleValue() + (xy.doubleValue() - ((Double)this.XY.get(this.regIndex.intValue())).doubleValue()));
+/*  91 */       this.XY.set(this.regIndex.intValue(), xy);
+/*  92 */       this.sumX2 = Double.valueOf(this.sumX2.doubleValue() + (x2.doubleValue() - ((Double)this.X2.get(this.regIndex.intValue())).doubleValue()));
+/*  93 */       this.X2.set(this.regIndex.intValue(), x2);
+/*  94 */       this.regIndex = Integer.valueOf((this.regIndex.intValue() + 1) % this.periodReg.intValue());
 /*     */     }
-/*  91 */     this.eta = Double.valueOf(this.sumXY.doubleValue() / this.sumX2.doubleValue());
-/*  92 */     return this.eta;
+/*  96 */     this.eta = Double.valueOf(this.sumXY.doubleValue() / this.sumX2.doubleValue());
+/*  97 */     return this.eta;
 /*     */   }
 /*     */   
 /*     */   private Double getX(Double ret, Double vol) {
-/*  96 */     if (this.volList.size() < this.periodVol.intValue()) {
-/*  97 */       this.volList.add(vol);
-/*  98 */       this.sumVol = Double.valueOf(this.sumVol.doubleValue() + vol.doubleValue());
+/* 101 */     if (this.volList.size() < this.periodVol.intValue()) {
+/* 102 */       this.volList.add(vol);
+/* 103 */       this.sumVol = Double.valueOf(this.sumVol.doubleValue() + vol.doubleValue());
 /*     */     } else {
-/* 100 */       this.sumVol = Double.valueOf(this.sumVol.doubleValue() + (vol.doubleValue() - ((Double)this.volList.get(this.volIndex.intValue())).doubleValue()));
-/* 101 */       this.volList.set(this.volIndex.intValue(), vol);
-/* 102 */       this.volIndex = Integer.valueOf((this.volIndex.intValue() + 1) % this.periodVol.intValue());
+/* 105 */       this.sumVol = Double.valueOf(this.sumVol.doubleValue() + (vol.doubleValue() - ((Double)this.volList.get(this.volIndex.intValue())).doubleValue()));
+/* 106 */       this.volList.set(this.volIndex.intValue(), vol);
+/* 107 */       this.volIndex = Integer.valueOf((this.volIndex.intValue() + 1) % this.periodVol.intValue());
 /*     */     }
-/* 104 */     this.volJ = Double.valueOf(Math.sqrt(vol.doubleValue() / (this.sumVol.doubleValue() / this.volList.size())));
+/* 109 */     this.volJ = Double.valueOf(Math.sqrt(vol.doubleValue() / (this.sumVol.doubleValue() / this.volList.size())));
 /*     */     
-/* 106 */     return Double.valueOf(this.volJ.doubleValue() * this.atr.doubleValue());
+/* 111 */     return Double.valueOf(this.volJ.doubleValue() * this.atr.doubleValue());
 /*     */   }
 /*     */   
 /*     */   private void shiftForRO(Double rollOver) {
-/* 110 */     this.prevCl = Double.valueOf(this.prevCl.doubleValue() + rollOver.doubleValue());
+/* 115 */     this.prevCl = Double.valueOf(this.prevCl.doubleValue() + rollOver.doubleValue());
 /*     */   }
 /*     */ }
 

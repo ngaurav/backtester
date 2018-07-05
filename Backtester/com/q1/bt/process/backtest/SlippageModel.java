@@ -2,17 +2,18 @@
 /*    */ 
 /*    */ public enum SlippageModel
 /*    */ {
-/*  5 */   AdaptiveModelSigma(1),  AdaptiveModelATR(2),  ConstantSlippage(3),  ZeroSlippage(4),  LinearModel(5),  TickSlippage(
-/*  6 */     6),  LinearModelHalfTick(7),  KylesLambdaSigma(8),  KylesLambdaATR(9);
+/*  5 */   AdaptiveModel(1),  AdaptiveModelSigma(2),  AdaptiveModelATR(3),  ConstantSlippage(
+/*  6 */     4),  ZeroSlippage(5),  LinearModel(6),  TickSlippage(7),  LinearModelHalfTick(
+/*  7 */     8),  KylesLambdaSigma(9),  KylesLambdaATR(10);
 /*    */   
 /*    */   private final int Val;
 /*    */   
 /*    */   private SlippageModel(int Val) {
-/* 11 */     this.Val = Val;
+/* 12 */     this.Val = Val;
 /*    */   }
 /*    */   
 /*    */   public int getVal() {
-/* 15 */     return this.Val;
+/* 16 */     return this.Val;
 /*    */   }
 /*    */ }
 
