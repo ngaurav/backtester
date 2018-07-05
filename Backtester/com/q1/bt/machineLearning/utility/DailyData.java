@@ -1,5 +1,7 @@
 /*    */ package com.q1.bt.machineLearning.utility;
 /*    */ 
+/*    */ import java.util.HashMap;
+/*    */ 
 /*    */ public class DailyData extends CandleData
 /*    */ {
 /*    */   String assetName;
@@ -7,15 +9,15 @@
 /*    */   
 /*    */   public DailyData(String assetName, String assetType)
 /*    */   {
-/* 10 */     super(assetName, assetType);
-/* 11 */     this.mtm = null;
-/* 12 */     this.assetName = assetName;
+/* 12 */     super(assetName, assetType);
+/* 13 */     this.mtm = null;
+/* 14 */     this.assetName = assetName;
 /*    */   }
 /*    */   
-/*    */   public void updateData(Double op, Double hi, Double lo, Double cl, Double vol, Double rollOver, Boolean isroll, Long date, Double mtm)
+/*    */   public void updateData(Double op, Double hi, Double lo, Double cl, Double vol, Double rollOver, Boolean isroll, Long date, Integer expiry, Integer actualExpiry, Integer rolloverExpiry, Double mtm, HashMap<String, String> metaDataMap)
 /*    */   {
-/* 17 */     updateData(op, hi, lo, cl, vol, rollOver, isroll, date);
-/* 18 */     this.mtm = Double.valueOf(mtm == null ? 0.0D : mtm.doubleValue());
+/* 19 */     updateData(op, hi, lo, cl, vol, rollOver, isroll, date, expiry, actualExpiry, rolloverExpiry, metaDataMap);
+/* 20 */     this.mtm = Double.valueOf(mtm == null ? 0.0D : mtm.doubleValue());
 /*    */   }
 /*    */ }
 

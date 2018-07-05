@@ -1,6 +1,7 @@
 /*     */ package com.q1.bt.machineLearning.driver;
 /*     */ 
 /*     */ import com.q1.bt.data.classes.Scrip;
+/*     */ import com.q1.bt.global.BacktesterGlobal;
 /*     */ import com.q1.bt.machineLearning.absclasses.Correl;
 /*     */ import com.q1.bt.machineLearning.absclasses.DailyIndColl;
 /*     */ import com.q1.bt.machineLearning.absclasses.Factor;
@@ -13,6 +14,7 @@
 /*     */ import com.q1.bt.machineLearning.utility.DailyDataReader;
 /*     */ import com.q1.bt.machineLearning.utility.MetadataReader;
 /*     */ import com.q1.bt.machineLearning.utility.TradeAndMTMDataProcessor;
+/*     */ import com.q1.bt.process.objects.Backtest;
 /*     */ import com.q1.bt.process.parameter.MachineLearningParameter;
 /*     */ import com.q1.csv.CSVWriter;
 /*     */ import java.io.File;
@@ -47,8 +49,10 @@
 /*     */ 
 /*     */ 
 /*     */ 
+/*     */ 
 /*     */ public class MLInputFileGenerator
 /*     */ {
+/*     */   public boolean bias;
 /*     */   HashMap<String, DailyDataReader> dailyReaderCollection;
 /*     */   HashMap<String, DailyIndColl> dailyPriceIndCollection;
 /*     */   HashMap<String, DailyIndColl> dailyMTMIndCollection;
@@ -61,11 +65,19 @@
 /*     */   HashMap<String, ArrayList<Double[]>> dailyMTMIndVars;
 /*     */   private ArrayList<String> priceIndNames;
 /*     */   private ArrayList<String> mtmIndNames;
+/*     */   BacktesterGlobal btGlobal;
+/*     */   Backtest backtest;
 /*     */   MachineLearningParameter mlParameter;
 /*     */   
-/*     */   public MLInputFileGenerator(MachineLearningParameter mlParameter)
+/*     */   public MLInputFileGenerator(BacktesterGlobal btGlobal, Backtest backtest, MachineLearningParameter mlParameter, HashMap<String, DailyDataReader> dailyReaderCollection, boolean bias)
 /*     */   {
-/*  68 */     this.mlParameter = mlParameter;
+/*  74 */     this.btGlobal = btGlobal;
+/*  75 */     this.backtest = backtest;
+/*  76 */     this.mlParameter = mlParameter;
+/*     */     
+/*  78 */     this.dailyReaderCollection = dailyReaderCollection;
+/*     */     
+/*  80 */     this.bias = bias;
 /*     */   }
 /*     */   
 /*     */ 
@@ -77,158 +89,163 @@
 /*     */     
 /*     */     try
 /*     */     {
-/*  80 */       MetadataReader mdMap = new MetadataReader(sourcePath, dataPath, scripUniverse);
-/*  81 */       mdScripwiseMap = mdMap.getMetadataMap();
+/*  92 */       MetadataReader mdMap = new MetadataReader(sourcePath, dataPath, scripUniverse);
+/*  93 */       mdScripwiseMap = mdMap.getMetadataMap();
 /*     */     } catch (Exception e) { HashMap<String, TreeMap<Long, ArrayList<Long>>> mdScripwiseMap;
-/*  83 */       mdScripwiseMap = new HashMap();
+/*  95 */       mdScripwiseMap = new HashMap();
 /*     */     }
 /*     */     
 /*     */ 
 /*     */ 
-/*  88 */     File destDir = new File(destPath);
-/*  89 */     if ((destDir.exists()) && (nextLayer))
+/* 100 */     File destDir = new File(destPath);
+/* 101 */     if ((destDir.exists()) && (nextLayer))
 /*     */     {
-/*  91 */       for (int i = 1;; i++) {
-/*  92 */         File tempDir = new File(destPath + "/Temp/Temp" + i);
-/*  93 */         if (!tempDir.exists()) {
-/*  94 */           tempDir.mkdirs();
-/*  95 */           break;
+/* 103 */       for (int i = 1;; i++) {
+/* 104 */         File tempDir = new File(destPath + "/Temp/Temp" + i);
+/* 105 */         if (!tempDir.exists()) {
+/* 106 */           tempDir.mkdirs();
+/* 107 */           break;
 /*     */         }
 /*     */       }
 /*     */       
 /*     */ 
-/* 100 */       sourcePath = destPath + "/Temp/Temp" + i;
+/* 112 */       sourcePath = destPath + "/Temp/Temp" + i;
 /*     */       String[] arrayOfString1;
-/* 102 */       int j = (arrayOfString1 = destDir.list()).length; for (int i = 0; i < j; i++) { String dirName = arrayOfString1[i];
-/* 103 */         if (!dirName.contains("Temp")) {
-/* 104 */           File dir = new File(destPath + "/" + dirName);
-/* 105 */           if (dir.isFile()) {
-/* 106 */             if (dir.renameTo(new File(destPath + "/Temp/Temp" + i + "/" + dirName))) {
-/* 107 */               System.out.println(dirName + " moved successfully");
+/* 114 */       int j = (arrayOfString1 = destDir.list()).length; for (int i = 0; i < j; i++) { String dirName = arrayOfString1[i];
+/* 115 */         if (!dirName.contains("Temp")) {
+/* 116 */           File dir = new File(destPath + "/" + dirName);
+/* 117 */           if (dir.isFile()) {
+/* 118 */             if (dir.renameTo(new File(destPath + "/Temp/Temp" + i + "/" + dirName))) {
+/* 119 */               System.out.println(dirName + " moved successfully");
 /*     */             } else
-/* 109 */               System.out.println(dirName + " could not be moved");
+/* 121 */               System.out.println(dirName + " could not be moved");
 /*     */           } else {
-/* 111 */             File newDir = new File(destPath + "/Temp/Temp" + i + "/" + dirName);
-/* 112 */             newDir.mkdirs();
-/* 113 */             String[] arrayOfString2; int m = (arrayOfString2 = dir.list()).length; for (int k = 0; k < m; k++) { String fileName = arrayOfString2[k];
-/* 114 */               File file = new File(destPath + "/" + dirName + "/" + fileName);
-/* 115 */               if (file.renameTo(new File(destPath + "/Temp/Temp" + i + "/" + dirName + "/" + fileName))) {
-/* 116 */                 System.out.println(fileName + " moved successfully");
+/* 123 */             File newDir = new File(destPath + "/Temp/Temp" + i + "/" + dirName);
+/* 124 */             newDir.mkdirs();
+/* 125 */             String[] arrayOfString2; int m = (arrayOfString2 = dir.list()).length; for (int k = 0; k < m; k++) { String fileName = arrayOfString2[k];
+/* 126 */               File file = new File(destPath + "/" + dirName + "/" + fileName);
+/* 127 */               if (file.renameTo(new File(destPath + "/Temp/Temp" + i + "/" + dirName + "/" + fileName))) {
+/* 128 */                 System.out.println(fileName + " moved successfully");
 /*     */               } else {
-/* 118 */                 System.out.println(fileName + " could not be moved");
+/* 130 */                 System.out.println(fileName + " could not be moved");
 /*     */               }
 /*     */             }
 /*     */           }
 /*     */         }
 /*     */       }
 /*     */     }
-/* 125 */     initializeML(segmentWiseAssetUniverseMap, scripUniverse, mdScripwiseMap, sourcePath, destPath, dataPath, 
-/* 126 */       dailyStartDate);
+/* 137 */     initializeML(segmentWiseAssetUniverseMap, scripUniverse, mdScripwiseMap, sourcePath, destPath, dataPath, 
+/* 138 */       dailyStartDate);
 /*     */     
 /*     */ 
-/* 129 */     Calendar startDate = new GregorianCalendar();
-/* 130 */     Calendar endDate = new GregorianCalendar();
+/* 141 */     Calendar startDate = new GregorianCalendar();
+/* 142 */     Calendar endDate = new GregorianCalendar();
 /*     */     
-/* 132 */     SimpleDateFormat numericDate = new SimpleDateFormat("yyyyMMdd");
-/* 133 */     SimpleDateFormat numericYear = new SimpleDateFormat("yyyy");
+/* 144 */     SimpleDateFormat numericDate = new SimpleDateFormat("yyyyMMdd");
+/* 145 */     SimpleDateFormat numericYear = new SimpleDateFormat("yyyy");
 /*     */     try {
-/* 135 */       startDate.setTime(numericDate.parse(dailyStartDate.toString()));
-/* 136 */       endDate.setTime(numericDate.parse(((Long)dateList.get(dateList.size() - 1)).toString()));
+/* 147 */       startDate.setTime(numericDate.parse(dailyStartDate.toString()));
+/* 148 */       endDate.setTime(numericDate.parse(((Long)dateList.get(dateList.size() - 1)).toString()));
 /*     */     } catch (ParseException e1) {
-/* 138 */       System.out.println("Error in parsing Start and End daily date");
-/* 139 */       e1.printStackTrace();
+/* 150 */       System.out.println("Error in parsing Start and End daily date");
+/* 151 */       e1.printStackTrace();
 /*     */     }
 /*     */     
 /*     */ 
 /*     */ 
 /*     */ 
 /*     */ 
-/* 146 */     this.mlParameter.getVarList().getVarNames();
-/* 147 */     Long curYear = Long.valueOf(1770L);
-/* 148 */     HashMap<String, ArrayList<Double[]>> priceIndVarsMap = new HashMap();
-/* 149 */     HashMap<String, ArrayList<Double[]>> mtmIndVarsMap = new HashMap();
+/* 158 */     this.mlParameter.getVarList().getVarNames();
+/* 159 */     Long curYear = Long.valueOf(1770L);
+/* 160 */     HashMap<String, ArrayList<Double[]>> priceIndVarsMap = new HashMap();
+/* 161 */     HashMap<String, ArrayList<Double[]>> mtmIndVarsMap = new HashMap();
 /*     */     
-/* 151 */     endDate.add(5, 1);
+/* 163 */     endDate.add(5, 1);
 /*     */     
-/* 153 */     for (Calendar dt = startDate; dt.compareTo(endDate) <= 0; dt.add(5, 1))
+/* 165 */     for (Calendar dt = startDate; dt.compareTo(endDate) <= 0; dt.add(5, 1))
 /*     */     {
 /*     */ 
 /*     */ 
-/* 157 */       priceIndVarsMap.clear();
-/* 158 */       mtmIndVarsMap.clear();
+/* 169 */       priceIndVarsMap.clear();
+/* 170 */       mtmIndVarsMap.clear();
 /*     */       Long year;
-/* 160 */       Long year; if (dt.compareTo(endDate) == 0) {
-/* 161 */         Long date = Long.valueOf(99999999L);
-/* 162 */         year = Long.valueOf(9999L);
+/* 172 */       Long year; if (dt.compareTo(endDate) == 0) {
+/* 173 */         Long date = Long.valueOf(99999999L);
+/* 174 */         year = Long.valueOf(9999L);
 /*     */       } else {
-/* 164 */         date = Long.valueOf(Long.parseLong(numericDate.format(dt.getTime())));
-/* 165 */         year = Long.valueOf(Long.parseLong(numericYear.format(dt.getTime())));
+/* 176 */         date = Long.valueOf(Long.parseLong(numericDate.format(dt.getTime())));
+/* 177 */         year = Long.valueOf(Long.parseLong(numericYear.format(dt.getTime())));
 /*     */       }
 /*     */       
-/* 168 */       if (!curYear.equals(year)) {
-/* 169 */         System.out.println("Processing Year: " + year);
-/* 170 */         curYear = year;
+/* 180 */       if (!curYear.equals(year)) {
+/* 181 */         System.out.println("Processing Year: " + year);
+/* 182 */         curYear = year;
 /*     */       }
 /*     */       
 /*     */ 
-/* 174 */       dailyUpdate(segmentWiseAssetUniverseMap, scripUniverse, (Long)date, stratTradePnL);
+/* 186 */       dailyUpdate(segmentWiseAssetUniverseMap, scripUniverse, (Long)date, stratTradePnL);
 /*     */       
-/* 176 */       Object tradePnLList = (HashMap)stratTradePnL.getTradeMTMMat().get(date);
+/* 188 */       Object tradePnLList = (HashMap)stratTradePnL.getTradeMTMMat().get(date);
 /*     */       
-/* 178 */       priceIndVarsMap.putAll(this.dailyPriceIndVars);
-/* 179 */       mtmIndVarsMap.putAll(this.dailyMTMIndVars);
-/* 180 */       Iterator localIterator2; for (Iterator localIterator1 = segmentWiseAssetUniverseMap.entrySet().iterator(); localIterator1.hasNext(); 
+/* 190 */       priceIndVarsMap.putAll(this.dailyPriceIndVars);
+/* 191 */       mtmIndVarsMap.putAll(this.dailyMTMIndVars);
+/* 192 */       Iterator localIterator2; for (Iterator localIterator1 = segmentWiseAssetUniverseMap.entrySet().iterator(); localIterator1.hasNext(); 
 /*     */           
 /*     */ 
 /*     */ 
-/* 184 */           localIterator2.hasNext())
+/* 196 */           localIterator2.hasNext())
 /*     */       {
-/* 180 */         Map.Entry<String, ArrayList<Asset>> entry = (Map.Entry)localIterator1.next();
-/* 181 */         String segmentName = (String)entry.getKey();
-/* 182 */         ArrayList<Asset> segmentAssetUniverse = (ArrayList)entry.getValue();
+/* 192 */         Map.Entry<String, ArrayList<Asset>> entry = (Map.Entry)localIterator1.next();
+/* 193 */         String segmentName = (String)entry.getKey();
+/* 194 */         ArrayList<Asset> segmentAssetUniverse = (ArrayList)entry.getValue();
 /*     */         
-/* 184 */         localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
-/* 185 */         String assetName = asset.getAssetName();
-/* 186 */         if (tradeStartEndMaps.get(assetName) != null)
+/* 196 */         localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
+/* 197 */         String assetName = asset.getAssetName();
+/* 198 */         if (tradeStartEndMaps.get(assetName) != null)
 /*     */         {
-/* 188 */           Double mtm = tradePnLList == null ? null : (Double)((HashMap)tradePnLList).get(assetName);
+/* 200 */           Double mtm = tradePnLList == null ? null : (Double)((HashMap)tradePnLList).get(assetName);
 /*     */           
-/* 190 */           if (dt.compareTo(endDate) == 0) {
-/* 191 */             mtm = Double.valueOf(0.0D);
+/* 202 */           if (dt.compareTo(endDate) == 0) {
+/* 203 */             mtm = Double.valueOf(0.0D);
 /*     */           }
 /*     */           
-/* 194 */           if (mtm != null) {
-/* 195 */             String scripName = asset.getScrip().scripID;
+/* 206 */           if (mtm != null) {
+/* 207 */             String scripName = asset.getScrip().scripID;
 /*     */             
-/* 197 */             if ((this.priceIndNames.size() == 0) || (priceIndVarsMap.get(scripName) != null))
+/* 209 */             if ((this.priceIndNames.size() == 0) || (priceIndVarsMap.get(scripName) != null))
 /*     */             {
 /*     */ 
-/* 200 */               if ((this.mtmIndNames.size() == 0) || (mtmIndVarsMap.get(assetName) != null))
+/* 212 */               if ((this.mtmIndNames.size() == 0) || (mtmIndVarsMap.get(assetName) != null))
 /*     */               {
 /*     */ 
-/* 203 */                 CSVWriter rInputWriter = (CSVWriter)this.rInputWriterMap.get(segmentName);
-/* 204 */                 String tradeEndDate = "";
+/* 215 */                 CSVWriter rInputWriter = (CSVWriter)this.rInputWriterMap.get(segmentName);
+/* 216 */                 String tradeEndDate = "";
 /*     */                 
-/* 206 */                 if (((TreeMap)tradeStartEndMaps.get(assetName)).get(date) == null) {
-/* 207 */                   tradeEndDate = "99999999";
+/* 218 */                 if (((TreeMap)tradeStartEndMaps.get(assetName)).get(date) == null) {
+/* 219 */                   tradeEndDate = "99999999";
 /*     */                 } else {
-/* 209 */                   tradeEndDate = ((Long)((TreeMap)tradeStartEndMaps.get(assetName)).get(date)).toString();
+/* 221 */                   tradeEndDate = ((Long)((TreeMap)tradeStartEndMaps.get(assetName)).get(date)).toString();
 /*     */                 }
 /*     */                 
 /*     */ 
-/* 213 */                 Integer tradeSide = (Integer)((TreeMap)tradeStartDateTradeSideMaps.get(assetName)).get(date);
+/* 225 */                 Integer tradeSide = (Integer)((TreeMap)tradeStartDateTradeSideMaps.get(assetName)).get(date);
 /*     */                 
-/* 215 */                 if (tradeSide == null) {
-/* 216 */                   tradeSide = Integer.valueOf(0);
-/*     */                 }
-/* 218 */                 if (((Long)date).equals(Long.valueOf(99999999L)))
+/* 227 */                 if (this.bias)
 /*     */                 {
-/* 220 */                   writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, Integer.valueOf(1), priceIndVarsMap, mtmIndVarsMap, scripName, mtm, true);
-/* 221 */                   writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, Integer.valueOf(-1), priceIndVarsMap, mtmIndVarsMap, scripName, mtm, true);
+/* 229 */                   if (tradeSide == null)
+/*     */                   {
+/* 231 */                     writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, Integer.valueOf(1), priceIndVarsMap, mtmIndVarsMap, scripName, Double.valueOf(0.0D), false);
+/* 232 */                     writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, Integer.valueOf(-1), priceIndVarsMap, mtmIndVarsMap, scripName, Double.valueOf(0.0D), false);
+/*     */                   }
+/*     */                   else
+/*     */                   {
+/* 236 */                     writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, tradeSide, priceIndVarsMap, mtmIndVarsMap, scripName, mtm, false);
+/* 237 */                     writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, Integer.valueOf(-tradeSide.intValue()), priceIndVarsMap, mtmIndVarsMap, scripName, Double.valueOf(0.0D), false);
+/*     */                   }
+/*     */                   
 /*     */                 }
-/*     */                 else
-/*     */                 {
-/* 225 */                   writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, tradeSide, priceIndVarsMap, mtmIndVarsMap, scripName, mtm, false);
+/*     */                 else {
+/* 242 */                   writeLineInInputFile(rInputWriter, (Long)date, tradeEndDate, assetName, Integer.valueOf(0), priceIndVarsMap, mtmIndVarsMap, scripName, mtm, false);
 /*     */                 }
 /*     */               }
 /*     */             }
@@ -243,9 +260,10 @@
 /*     */ 
 /*     */ 
 /*     */ 
-/* 240 */     for (Object date = this.rInputWriterMap.values().iterator(); ((Iterator)date).hasNext();) { CSVWriter rInputWriter = (CSVWriter)((Iterator)date).next();
-/* 241 */       rInputWriter.flush();
-/* 242 */       rInputWriter.close();
+/*     */ 
+/* 258 */     for (Object date = this.rInputWriterMap.values().iterator(); ((Iterator)date).hasNext();) { CSVWriter rInputWriter = (CSVWriter)((Iterator)date).next();
+/* 259 */       rInputWriter.flush();
+/* 260 */       rInputWriter.close();
 /*     */     }
 /*     */   }
 /*     */   
@@ -259,35 +277,33 @@
 /*     */   private void initializeML(HashMap<String, ArrayList<Asset>> segmentWiseAssetUniverseMap, ArrayList<String> scripUniverse, HashMap<String, TreeMap<Long, ArrayList<Long>>> mdScripwiseMap, String sourcePath, String destPath, String dataPath, Long dailyStartDate)
 /*     */     throws Exception
 /*     */   {
-/* 256 */     this.dailyMTMIndVars = new HashMap();
-/* 257 */     this.dailyPriceIndVars = new HashMap();
+/* 274 */     this.dailyMTMIndVars = new HashMap();
+/* 275 */     this.dailyPriceIndVars = new HashMap();
 /*     */     
-/* 259 */     initDailyData(segmentWiseAssetUniverseMap);
-/* 260 */     initCandleData(scripUniverse);
+/* 277 */     initDailyData(segmentWiseAssetUniverseMap);
+/* 278 */     initCandleData(scripUniverse);
 /*     */     
-/* 262 */     initIndicators(segmentWiseAssetUniverseMap, scripUniverse, this.mlParameter.getFactorList(), 
-/* 263 */       this.mlParameter.getVarList(), dataPath);
-/* 264 */     initCorelMap(scripUniverse, this.mlParameter.getCorrelPeriod().intValue());
-/*     */     
-/* 266 */     this.dailyReaderCollection = initDailyreader(scripUniverse, dataPath, dailyStartDate);
+/* 280 */     initIndicators(segmentWiseAssetUniverseMap, scripUniverse, this.mlParameter.getFactorList(), 
+/* 281 */       this.mlParameter.getVarList(), dataPath);
+/* 282 */     initCorelMap(scripUniverse, this.mlParameter.getCorrelPeriod().intValue());
 /*     */     
 /*     */ 
-/* 269 */     initwriters(dataPath, segmentWiseAssetUniverseMap.keySet(), sourcePath, destPath);
+/* 285 */     initwriters(dataPath, segmentWiseAssetUniverseMap.keySet(), sourcePath, destPath);
 /*     */   }
 /*     */   
 /*     */ 
 /*     */ 
 /*     */   private void initCorelMap(ArrayList<String> scripList, int correlPeriod)
 /*     */   {
-/* 276 */     this.correlMap = new HashMap();
-/* 277 */     this.correlVals = new TreeMap();
-/* 278 */     for (int i = 0; i < scripList.size(); i++) {
-/* 279 */       String scrip1 = (String)scripList.get(i);
-/* 280 */       this.correlMap.put(scrip1, new HashMap());
-/* 281 */       for (int j = 0; j < i; j++) {
-/* 282 */         String scrip2 = (String)scripList.get(j);
-/* 283 */         Correl corEle = new Correl(correlPeriod);
-/* 284 */         ((HashMap)this.correlMap.get(scrip1)).put(scrip2, corEle);
+/* 292 */     this.correlMap = new HashMap();
+/* 293 */     this.correlVals = new TreeMap();
+/* 294 */     for (int i = 0; i < scripList.size(); i++) {
+/* 295 */       String scrip1 = (String)scripList.get(i);
+/* 296 */       this.correlMap.put(scrip1, new HashMap());
+/* 297 */       for (int j = 0; j < i; j++) {
+/* 298 */         String scrip2 = (String)scripList.get(j);
+/* 299 */         Correl corEle = new Correl(correlPeriod);
+/* 300 */         ((HashMap)this.correlMap.get(scrip1)).put(scrip2, corEle);
 /*     */       }
 /*     */     }
 /*     */   }
@@ -298,68 +314,68 @@
 /*     */   private void initIndicators(HashMap<String, ArrayList<Asset>> segmentWiseAssetUniverseMap, ArrayList<String> scripList, ArrayList<String> factorList, VarList varListType, String dataPath)
 /*     */     throws Exception
 /*     */   {
-/* 295 */     this.dailyPriceIndCollection = new HashMap();
-/* 296 */     this.dailyMTMIndCollection = new HashMap();
+/* 311 */     this.dailyPriceIndCollection = new HashMap();
+/* 312 */     this.dailyMTMIndCollection = new HashMap();
 /*     */     
-/* 298 */     this.priceIndNames = new ArrayList();
-/* 299 */     this.mtmIndNames = new ArrayList();
+/* 314 */     this.priceIndNames = new ArrayList();
+/* 315 */     this.mtmIndNames = new ArrayList();
 /*     */     
 /*     */     Iterator localIterator2;
-/* 302 */     for (Iterator localIterator1 = segmentWiseAssetUniverseMap.values().iterator(); localIterator1.hasNext(); 
-/* 303 */         localIterator2.hasNext())
+/* 318 */     for (Iterator localIterator1 = segmentWiseAssetUniverseMap.values().iterator(); localIterator1.hasNext(); 
+/* 319 */         localIterator2.hasNext())
 /*     */     {
-/* 302 */       ArrayList<Asset> segmentAssetUniverse = (ArrayList)localIterator1.next();
-/* 303 */       localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
+/* 318 */       ArrayList<Asset> segmentAssetUniverse = (ArrayList)localIterator1.next();
+/* 319 */       localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
 /*     */       
 /*     */ 
-/* 306 */       DailyIndColl dailyMTMIndicator = new DailyIndColl(factorList, varListType, FactorType.MTM, 
-/* 307 */         ValueType.Numerical);
+/* 322 */       DailyIndColl dailyMTMIndicator = new DailyIndColl(factorList, varListType, FactorType.MTM, 
+/* 323 */         ValueType.Numerical);
 /*     */       
 /*     */ 
-/* 310 */       this.dailyMTMIndCollection.put(asset.getAssetName(), dailyMTMIndicator);
+/* 326 */       this.dailyMTMIndCollection.put(asset.getAssetName(), dailyMTMIndicator);
 /*     */     }
 /*     */     
 /*     */ 
 /*     */ 
-/* 315 */     for (String scripName : scripList) {
-/* 316 */       DailyIndColl dailyPriceIndicator = new DailyIndColl(factorList, varListType, FactorType.Price, 
-/* 317 */         ValueType.Numerical);
-/* 318 */       this.dailyPriceIndCollection.put(scripName, dailyPriceIndicator);
+/* 331 */     for (String scripName : scripList) {
+/* 332 */       DailyIndColl dailyPriceIndicator = new DailyIndColl(factorList, varListType, FactorType.Price, 
+/* 333 */         ValueType.Numerical);
+/* 334 */       this.dailyPriceIndCollection.put(scripName, dailyPriceIndicator);
 /*     */     }
 /*     */     
 /*     */ 
-/* 322 */     DailyIndColl Price1DColl = (DailyIndColl)this.dailyPriceIndCollection.get(scripList.get(0));
-/* 323 */     DailyIndColl MTM1DColl = 
-/* 324 */       (DailyIndColl)this.dailyMTMIndCollection.get(((Asset)((ArrayList)segmentWiseAssetUniverseMap.values().iterator().next()).get(0)).getAssetName());
+/* 338 */     DailyIndColl Price1DColl = (DailyIndColl)this.dailyPriceIndCollection.get(scripList.get(0));
+/* 339 */     DailyIndColl MTM1DColl = 
+/* 340 */       (DailyIndColl)this.dailyMTMIndCollection.get(((Asset)((ArrayList)segmentWiseAssetUniverseMap.values().iterator().next()).get(0)).getAssetName());
 /*     */     
-/* 326 */     for (Factor factor : Price1DColl.getFactorList()) {
-/* 327 */       this.priceIndNames.add(factor.getName());
+/* 342 */     for (Factor factor : Price1DColl.getFactorList()) {
+/* 343 */       this.priceIndNames.add(factor.getName());
 /*     */     }
 /*     */     
-/* 330 */     for (Factor factor : MTM1DColl.getFactorList()) {
-/* 331 */       this.mtmIndNames.add(factor.getName());
+/* 346 */     for (Factor factor : MTM1DColl.getFactorList()) {
+/* 347 */       this.mtmIndNames.add(factor.getName());
 /*     */     }
 /*     */   }
 /*     */   
 /*     */   private void initDailyData(HashMap<String, ArrayList<Asset>> segmentWiseAssetUniverseMap)
 /*     */   {
-/* 337 */     this.dailyDataCollection = new HashMap();
-/* 338 */     Iterator localIterator2; for (Iterator localIterator1 = segmentWiseAssetUniverseMap.values().iterator(); localIterator1.hasNext(); 
-/* 339 */         localIterator2.hasNext())
+/* 353 */     this.dailyDataCollection = new HashMap();
+/* 354 */     Iterator localIterator2; for (Iterator localIterator1 = segmentWiseAssetUniverseMap.values().iterator(); localIterator1.hasNext(); 
+/* 355 */         localIterator2.hasNext())
 /*     */     {
-/* 338 */       ArrayList<Asset> segmentAssetUniverse = (ArrayList)localIterator1.next();
-/* 339 */       localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
-/* 340 */       this.dailyDataCollection.put(asset.getAssetName(), 
-/* 341 */         new DailyData(asset.getScrip().scripID, asset.getScrip().segmentName));
+/* 354 */       ArrayList<Asset> segmentAssetUniverse = (ArrayList)localIterator1.next();
+/* 355 */       localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
+/* 356 */       this.dailyDataCollection.put(asset.getAssetName(), 
+/* 357 */         new DailyData(asset.getScrip().scripID, asset.getScrip().segmentName));
 /*     */     }
 /*     */   }
 /*     */   
 /*     */   private void initCandleData(ArrayList<String> scripList)
 /*     */   {
-/* 347 */     this.candleDataCollection = new HashMap();
-/* 348 */     for (String scripName : scripList) {
-/* 349 */       String[] scripNameParts = scripName.split(" ");
-/* 350 */       this.candleDataCollection.put(scripName, new DailyData(scripNameParts[3], scripNameParts[1]));
+/* 363 */     this.candleDataCollection = new HashMap();
+/* 364 */     for (String scripName : scripList) {
+/* 365 */       String[] scripNameParts = scripName.split(" ");
+/* 366 */       this.candleDataCollection.put(scripName, new CandleData(scripNameParts[3], scripNameParts[1]));
 /*     */     }
 /*     */   }
 /*     */   
@@ -374,55 +390,33 @@
 /*     */   private void initwriters(String dataPath, Set<String> segmentSet, String sourcePath, String destPath)
 /*     */     throws Exception
 /*     */   {
-/* 365 */     this.rInputWriterMap = new HashMap();
-/* 366 */     for (String segmentName : segmentSet)
+/* 381 */     this.rInputWriterMap = new HashMap();
+/* 382 */     for (String segmentName : segmentSet)
 /*     */     {
-/* 368 */       if (this.rInputWriterMap.get(segmentName) == null)
+/* 384 */       if (this.rInputWriterMap.get(segmentName) == null)
 /*     */       {
 /*     */ 
-/* 371 */         CSVWriter inputWriter = new CSVWriter(destPath + "/ML/" + segmentName + " Input.csv", false, ",");
+/* 387 */         CSVWriter inputWriter = new CSVWriter(destPath + "/ML/" + segmentName + " Input.csv", false, ",");
 /*     */         
 /*     */ 
-/* 374 */         this.rInputWriterMap.put(segmentName, inputWriter);
+/* 390 */         this.rInputWriterMap.put(segmentName, inputWriter);
 /*     */         
 /*     */ 
-/* 377 */         inputWriter.write("Date,EndDate,Asset, TradeSide");
+/* 393 */         inputWriter.write("Date,EndDate,Asset, TradeSide");
 /*     */         
-/* 379 */         for (int i = 0; i < this.priceIndNames.size(); i++) {
-/* 380 */           inputWriter.write("," + (String)this.priceIndNames.get(i));
+/* 395 */         for (int i = 0; i < this.priceIndNames.size(); i++) {
+/* 396 */           inputWriter.write("," + (String)this.priceIndNames.get(i));
 /*     */         }
 /*     */         
-/* 383 */         for (int i = 0; i < this.mtmIndNames.size(); i++)
-/* 384 */           inputWriter.write("," + (String)this.mtmIndNames.get(i));
-/* 385 */         inputWriter.write(",MTM\n");
+/* 399 */         for (int i = 0; i < this.mtmIndNames.size(); i++)
+/* 400 */           inputWriter.write("," + (String)this.mtmIndNames.get(i));
+/* 401 */         inputWriter.write(",MTM\n");
 /*     */       }
 /*     */     }
 /*     */   }
 /*     */   
-/*     */   public static HashMap<String, DailyDataReader> initDailyreader(ArrayList<String> scripList, String dataPath, Long dailyStartDate)
-/*     */     throws Exception
-/*     */   {
-/* 393 */     HashMap<String, DailyDataReader> dailyReaderCollection = new HashMap();
-/* 394 */     for (String scripName : scripList)
-/*     */     {
 /*     */ 
 /*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/* 401 */       String scripNameNew = scripName.substring(0, scripName.length() - 3);
-/* 402 */       String filePath = dataPath + "/CC/" + scripNameNew + " " + "1D.csv";
-/*     */       try {
-/* 404 */         dailyReaderCollection.put(scripName, new DailyDataReader(filePath, dailyStartDate));
-/*     */       } catch (IOException e) {
-/* 406 */         System.out.println("Error in reading Daily file for " + scripName);
-/* 407 */         throw new Exception();
-/*     */       }
-/*     */     }
-/*     */     
-/* 411 */     return dailyReaderCollection;
-/*     */   }
-/*     */   
 /*     */ 
 /*     */ 
 /*     */   private void dailyUpdate(HashMap<String, ArrayList<Asset>> segmentWiseAssetUniverseMap, ArrayList<String> scripUniverse, Long date, TradeAndMTMDataProcessor stratTradePnL)
@@ -431,44 +425,57 @@
 /*     */     Iterator localIterator2;
 /*     */     
 /*     */ 
-/* 422 */     for (Iterator localIterator1 = segmentWiseAssetUniverseMap.values().iterator(); localIterator1.hasNext(); 
-/* 423 */         localIterator2.hasNext())
+/*     */ 
+/* 417 */     for (Iterator localIterator1 = segmentWiseAssetUniverseMap.values().iterator(); localIterator1.hasNext(); 
+/* 418 */         localIterator2.hasNext())
 /*     */     {
-/* 422 */       ArrayList<Asset> segmentAssetUniverse = (ArrayList)localIterator1.next();
-/* 423 */       localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
-/* 424 */       String assetName = asset.getAssetName();
-/* 425 */       Long prevDate = ((DailyDataReader)this.dailyReaderCollection.get(asset.getScrip().scripID)).getPrevDate();
-/* 426 */       ((DailyDataReader)this.dailyReaderCollection.get(asset.getScrip().scripID)).process(date, (DailyData)this.dailyDataCollection.get(assetName), 
-/* 427 */         (Double)((TreeMap)stratTradePnL.getDailyMTMMap().get(asset.getAssetName())).get(prevDate));
+/* 417 */       ArrayList<Asset> segmentAssetUniverse = (ArrayList)localIterator1.next();
+/* 418 */       localIterator2 = segmentAssetUniverse.iterator(); continue;Asset asset = (Asset)localIterator2.next();
+/* 419 */       String assetName = asset.getAssetName();
+/* 420 */       Long prevDate = ((DailyDataReader)this.dailyReaderCollection.get(asset.getScrip().scripID)).getPrevDate();
+/*     */       try {
+/* 422 */         ((DailyDataReader)this.dailyReaderCollection.get(asset.getScrip().scripID)).process(date, (CandleData)this.dailyDataCollection.get(assetName), 
+/* 423 */           (Double)((TreeMap)stratTradePnL.getDailyMTMMap().get(asset.getAssetName())).get(prevDate));
+/*     */       }
+/*     */       catch (Exception e) {
+/* 426 */         System.err.println("Error in fetching Daily Data Reader for " + assetName);
+/* 427 */         e.printStackTrace();
+/*     */       }
 /*     */       
-/* 429 */       getDailyMTMIndValues(date, asset.getAssetName());
+/* 430 */       getDailyMTMIndValues(date, asset.getAssetName());
 /*     */     }
 /*     */     
-/* 432 */     for (String scripName : scripUniverse)
-/*     */     {
-/* 434 */       ((DailyDataReader)this.dailyReaderCollection.get(scripName)).process(date, (CandleData)this.candleDataCollection.get(scripName));
+/* 433 */     for (String scripName : scripUniverse) {
+/*     */       try
+/*     */       {
+/* 436 */         ((DailyDataReader)this.dailyReaderCollection.get(scripName)).process(date, (CandleData)this.candleDataCollection.get(scripName));
+/*     */       }
+/*     */       catch (Exception e) {
+/* 439 */         System.err.println("Error in fetching Daily Data Reader for " + scripName);
+/* 440 */         e.printStackTrace();
+/*     */       }
 /*     */     }
 /*     */     
 /*     */ 
 /*     */ 
-/* 439 */     getDailyPriceIndValues(date, scripUniverse);
-/* 440 */     updateCorrelMatrix(date, scripUniverse);
+/* 446 */     getDailyPriceIndValues(date, scripUniverse);
+/* 447 */     updateCorrelMatrix(date, scripUniverse);
 /*     */   }
 /*     */   
 /*     */   private void updateCorrelMatrix(Long date, ArrayList<String> scripList)
 /*     */   {
-/* 445 */     this.correlVals.put(date, new HashMap());
-/* 446 */     for (int i = 0; i < scripList.size(); i++) {
-/* 447 */       String scrip1 = (String)scripList.get(i);
-/* 448 */       ((HashMap)this.correlVals.get(date)).put(scrip1, new HashMap());
-/* 449 */       ((HashMap)((HashMap)this.correlVals.get(date)).get(scrip1)).put(scrip1, Double.valueOf(1.0D));
-/* 450 */       for (int j = 0; j < i; j++) {
-/* 451 */         String scrip2 = (String)scripList.get(j);
-/* 452 */         ((Correl)((HashMap)this.correlMap.get(scrip1)).get(scrip2)).updateCorrel((CandleData)this.candleDataCollection.get(scrip1), 
-/* 453 */           (CandleData)this.candleDataCollection.get(scrip2), date);
-/* 454 */         Double correlVal = ((Correl)((HashMap)this.correlMap.get(scrip1)).get(scrip2)).getVal();
-/* 455 */         ((HashMap)((HashMap)this.correlVals.get(date)).get(scrip1)).put(scrip2, correlVal);
-/* 456 */         ((HashMap)((HashMap)this.correlVals.get(date)).get(scrip2)).put(scrip1, correlVal);
+/* 452 */     this.correlVals.put(date, new HashMap());
+/* 453 */     for (int i = 0; i < scripList.size(); i++) {
+/* 454 */       String scrip1 = (String)scripList.get(i);
+/* 455 */       ((HashMap)this.correlVals.get(date)).put(scrip1, new HashMap());
+/* 456 */       ((HashMap)((HashMap)this.correlVals.get(date)).get(scrip1)).put(scrip1, Double.valueOf(1.0D));
+/* 457 */       for (int j = 0; j < i; j++) {
+/* 458 */         String scrip2 = (String)scripList.get(j);
+/* 459 */         ((Correl)((HashMap)this.correlMap.get(scrip1)).get(scrip2)).updateCorrel((CandleData)this.candleDataCollection.get(scrip1), 
+/* 460 */           (CandleData)this.candleDataCollection.get(scrip2), date);
+/* 461 */         Double correlVal = ((Correl)((HashMap)this.correlMap.get(scrip1)).get(scrip2)).getVal();
+/* 462 */         ((HashMap)((HashMap)this.correlVals.get(date)).get(scrip1)).put(scrip2, correlVal);
+/* 463 */         ((HashMap)((HashMap)this.correlVals.get(date)).get(scrip2)).put(scrip1, correlVal);
 /*     */       }
 /*     */     }
 /*     */   }
@@ -482,15 +489,15 @@
 /*     */   private void getDailyMTMIndValues(Long date, String assetName)
 /*     */     throws IOException
 /*     */   {
-/* 470 */     DailyData[] dailyDataArray = { (DailyData)this.dailyDataCollection.get(assetName) };
-/* 471 */     this.dailyMTMIndVars.put(assetName, ((DailyIndColl)this.dailyMTMIndCollection.get(assetName)).process(dailyDataArray, date));
+/* 477 */     DailyData[] dailyDataArray = { (DailyData)this.dailyDataCollection.get(assetName) };
+/* 478 */     this.dailyMTMIndVars.put(assetName, ((DailyIndColl)this.dailyMTMIndCollection.get(assetName)).process(dailyDataArray, date));
 /*     */   }
 /*     */   
 /*     */   private void getDailyPriceIndValues(Long date, ArrayList<String> scripList) throws IOException
 /*     */   {
-/* 476 */     for (String scripName : scripList) {
-/* 477 */       CandleData[] candleDataArray = { (CandleData)this.candleDataCollection.get(scripName) };
-/* 478 */       this.dailyPriceIndVars.put(scripName, ((DailyIndColl)this.dailyPriceIndCollection.get(scripName)).process(candleDataArray, date));
+/* 483 */     for (String scripName : scripList) {
+/* 484 */       CandleData[] candleDataArray = { (CandleData)this.candleDataCollection.get(scripName) };
+/* 485 */       this.dailyPriceIndVars.put(scripName, ((DailyIndColl)this.dailyPriceIndCollection.get(scripName)).process(candleDataArray, date));
 /*     */     }
 /*     */   }
 /*     */   
@@ -498,44 +505,69 @@
 /*     */ 
 /*     */   private void writeLineInInputFile(CSVWriter rInputWriter, Long date, String tradeEndDate, String assetName, Integer tradeSide, HashMap<String, ArrayList<Double[]>> priceIndVarsMap, HashMap<String, ArrayList<Double[]>> mtmIndVarsMap, String scripName, Double mtm, boolean predictionDateFlag)
 /*     */   {
-/* 486 */     String tradeSideAssetName = "";
+/* 493 */     String tradeSideAssetName = "";
 /*     */     
-/* 488 */     if (tradeSide.intValue() == 1) {
-/* 489 */       tradeSideAssetName = "LON#" + assetName;
-/* 490 */     } else if (tradeSide.intValue() == -1) {
-/* 491 */       tradeSideAssetName = "SHO#" + assetName;
-/*     */     } else {
-/* 493 */       tradeSideAssetName = "NON#" + assetName;
-/*     */     }
-/*     */     try {
-/* 496 */       rInputWriter.write(date.toString());
-/* 497 */       rInputWriter.write("," + tradeEndDate);
-/*     */       
-/* 499 */       if (predictionDateFlag) {
-/* 500 */         rInputWriter.write("," + tradeSideAssetName);
+/* 495 */     if (this.bias)
+/*     */     {
+/* 497 */       if (tradeSide.intValue() == 1) {
+/* 498 */         tradeSideAssetName = "LON#" + assetName;
+/* 499 */       } else if (tradeSide.intValue() == -1) {
+/* 500 */         tradeSideAssetName = "SHO#" + assetName;
 /*     */       } else {
-/* 502 */         rInputWriter.write("," + assetName);
+/* 502 */         tradeSideAssetName = "NON#" + assetName;
 /*     */       }
-/* 504 */       rInputWriter.write("," + tradeSide);
+/*     */     }
+/*     */     else {
+/* 506 */       tradeSideAssetName = assetName;
+/*     */     }
+/*     */     
+/*     */     try
+/*     */     {
+/* 511 */       rInputWriter.write(date.toString());
+/* 512 */       rInputWriter.write("," + tradeEndDate);
+/* 513 */       rInputWriter.write("," + tradeSideAssetName);
+/* 514 */       rInputWriter.write("," + tradeSide);
 /*     */       
-/* 506 */       if (priceIndVarsMap.get(scripName) != null) {
-/* 507 */         for (int k = 0; k < ((ArrayList)priceIndVarsMap.get(scripName)).size(); k++) {
-/* 508 */           rInputWriter.write("," + ((Double[])((ArrayList)priceIndVarsMap.get(scripName)).get(k))[((1 - tradeSide.intValue()) / 2)]);
+/* 516 */       if (priceIndVarsMap.get(scripName) != null) {
+/* 517 */         for (int k = 0; k < ((ArrayList)priceIndVarsMap.get(scripName)).size(); k++) {
+/* 518 */           if (this.bias) {
+/* 519 */             rInputWriter.write("," + ((Double[])((ArrayList)priceIndVarsMap.get(scripName)).get(k))[((1 - tradeSide.intValue()) / 2)]);
+/*     */           }
+/*     */           else {
+/* 522 */             if (!((Double[])((ArrayList)priceIndVarsMap.get(scripName)).get(k))[0].equals(((Double[])((ArrayList)priceIndVarsMap.get(scripName)).get(k))[1]))
+/*     */             {
+/* 524 */               System.err.println("Getting different values in unbiased mode.");
+/* 525 */               System.err.println("Check definition of :" + (String)this.priceIndNames.get(k));
+/* 526 */               System.exit(0);
+/*     */             }
+/* 528 */             rInputWriter.write("," + ((Double[])((ArrayList)priceIndVarsMap.get(scripName)).get(k))[0]);
+/*     */           }
 /*     */         }
 /*     */       }
 /*     */       
-/* 512 */       if (mtmIndVarsMap.get(assetName) != null) {
-/* 513 */         for (int k = 0; k < ((ArrayList)mtmIndVarsMap.get(assetName)).size(); k++) {
-/* 514 */           rInputWriter.write("," + ((Double[])((ArrayList)mtmIndVarsMap.get(assetName)).get(k))[((1 - tradeSide.intValue()) / 2)]);
+/* 533 */       if (mtmIndVarsMap.get(assetName) != null) {
+/* 534 */         for (int k = 0; k < ((ArrayList)mtmIndVarsMap.get(assetName)).size(); k++) {
+/* 535 */           if (this.bias) {
+/* 536 */             rInputWriter.write("," + ((Double[])((ArrayList)mtmIndVarsMap.get(assetName)).get(k))[((1 - tradeSide.intValue()) / 2)]);
+/*     */           }
+/*     */           else {
+/* 539 */             if (!((Double[])((ArrayList)mtmIndVarsMap.get(assetName)).get(k))[0].equals(((Double[])((ArrayList)mtmIndVarsMap.get(assetName)).get(k))[1]))
+/*     */             {
+/* 541 */               System.err.println("Getting different values in unbiased mode.");
+/* 542 */               System.err.println("Check definition of :" + (String)this.mtmIndNames.get(k));
+/* 543 */               System.exit(0);
+/*     */             }
+/* 545 */             rInputWriter.write("," + ((Double[])((ArrayList)mtmIndVarsMap.get(assetName)).get(k))[0]);
+/*     */           }
 /*     */         }
 /*     */       }
 /*     */       
-/* 518 */       rInputWriter.write("," + mtm + "\n");
-/* 519 */       rInputWriter.flush();
+/* 550 */       rInputWriter.write("," + mtm + "\n");
+/* 551 */       rInputWriter.flush();
 /*     */     }
 /*     */     catch (IOException e)
 /*     */     {
-/* 523 */       e.printStackTrace();
+/* 555 */       e.printStackTrace();
 /*     */     }
 /*     */   }
 /*     */   
@@ -546,11 +578,11 @@
 /*     */ 
 /*     */   public HashMap<String, DailyDataReader> getDailyReaderCollection()
 /*     */   {
-/* 534 */     return this.dailyReaderCollection;
+/* 566 */     return this.dailyReaderCollection;
 /*     */   }
 /*     */   
 /*     */   public TreeMap<Long, HashMap<String, HashMap<String, Double>>> getCorrelVals() {
-/* 538 */     return this.correlVals;
+/* 570 */     return this.correlVals;
 /*     */   }
 /*     */ }
 

@@ -1,225 +1,181 @@
 /*     */ package com.q1.bt.machineLearning.utility;
 /*     */ 
-/*     */ import java.io.IOException;
+/*     */ import com.q1.bt.data.DataDriver;
+/*     */ import com.q1.bt.data.DataTypeViewer;
+/*     */ import com.q1.bt.data.ScripDataViewer;
+/*     */ import com.q1.bt.data.classes.Contract;
+/*     */ import com.q1.bt.data.classes.ContractData;
+/*     */ import com.q1.bt.data.classes.MetaData;
+/*     */ import com.q1.bt.data.classes.Scrip;
+/*     */ import com.q1.bt.process.objects.Backtest;
 /*     */ import java.io.PrintStream;
+/*     */ import java.util.ArrayList;
+/*     */ import java.util.HashMap;
 /*     */ 
 /*     */ public class DailyDataReader
 /*     */ {
-/*     */   com.q1.csv.CSVReader reader1D;
 /*     */   Long currentDate;
-/*     */   String[] curData;
-/*     */   String[] prevData;
+/*     */   Contract cur1DData;
+/*     */   MetaData curMDData;
+/*     */   Contract prev1DData;
+/*     */   MetaData prevMDData;
 /*     */   private Long mtmDate;
-/*  13 */   private boolean startFileFlag = true;
+/*  23 */   private boolean startFileFlag = true;
 /*     */   
-/*     */   public DailyDataReader(String source, Long startDate) throws IOException {
-/*     */     try {
-/*  17 */       this.reader1D = new com.q1.csv.CSVReader(source, ',', 2);
-/*     */     } catch (IOException e) {
-/*  19 */       System.out.println(source + " not found");
-/*  20 */       e.printStackTrace();
-/*  21 */       throw new IOException();
-/*     */     }
-/*  23 */     this.currentDate = Long.valueOf(0L);
-/*  24 */     this.curData = null;
-/*  25 */     this.prevData = null;
-/*  26 */     this.mtmDate = Long.valueOf(0L);
-/*     */   }
+/*     */   com.q1.bt.global.BacktesterGlobal btGlobal;
 /*     */   
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */   public void process(Long dataDate, DailyData dd, Double mtm)
-/*     */     throws IOException
+/*     */   Backtest backtest;
+/*     */   DataDriver dataDriver;
+/*     */   Scrip scrip;
+/*     */   
+/*     */   public DailyDataReader(Long startDate, com.q1.bt.global.BacktesterGlobal btGlobal, Backtest backtest, Scrip scrip, String scripListName)
+/*     */     throws java.io.IOException
 /*     */   {
-/*  36 */     if ((this.curData == null) && (this.startFileFlag)) {
-/*  37 */       this.startFileFlag = false;
-/*  38 */       this.prevData = this.reader1D.getLine();
-/*  39 */       if (this.prevData == null) {
-/*  40 */         System.out.println("No data in Daily File");
-/*  41 */         return;
-/*     */       }
-/*     */     }
-/*  44 */     if (this.currentDate.longValue() > dataDate.longValue())
-/*  45 */       return;
-/*  46 */     if (this.currentDate.longValue() == dataDate.longValue()) {
-/*  47 */       assignData(dataDate, dd, mtm);
-/*     */       
+/*  34 */     this.btGlobal = btGlobal;
+/*  35 */     this.backtest = backtest;
+/*  36 */     this.scrip = scrip;
+/*     */     
 /*     */ 
-/*  50 */       return; }
-/*  51 */     if (dataDate.longValue() == 99999999L) {
-/*  52 */       assignData(dataDate, dd, mtm);
-/*  53 */       return;
-/*     */     }
+/*     */ 
+/*  40 */     ArrayList<Scrip> scripSet = new ArrayList();
+/*  41 */     scripSet.add(scrip);
 /*     */     try
 /*     */     {
-/*     */       do {
-/*  58 */         this.currentDate = Long.valueOf(Long.parseLong(this.curData[0]));
-/*  59 */         if (this.currentDate.longValue() < dataDate.longValue()) {
-/*  60 */           this.prevData = this.curData;
-/*     */         } else {
-/*  62 */           if (this.currentDate.longValue() == dataDate.longValue()) {
-/*  63 */             assignData(dataDate, dd, mtm);
-/*     */             
-/*     */ 
-/*  66 */             return;
-/*     */           }
-/*  68 */           return;
-/*     */         }
-/*  57 */       } while ((this.curData = this.reader1D.getLine()) != null);
+/*  44 */       this.dataDriver = new DataDriver(btGlobal, startDate, backtest, scripListName, scripSet, "1D");
+/*     */     } catch (Exception e) {
+/*  46 */       System.out.println("Error in creation of data driver in ML Stage");
+/*  47 */       e.printStackTrace();
 /*     */     }
-/*     */     catch (Exception localException) {}
+/*  49 */     this.currentDate = Long.valueOf(0L);
+/*  50 */     this.cur1DData = null;
+/*  51 */     this.curMDData = null;
+/*  52 */     this.prev1DData = null;
+/*  53 */     this.prevMDData = null;
+/*  54 */     this.mtmDate = Long.valueOf(0L);
 /*     */   }
 /*     */   
 /*     */ 
 /*     */ 
 /*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */   public void process(Long dataDate, CandleData cd)
-/*     */     throws IOException
+/*     */   private void processFirstDateData()
+/*     */     throws Exception
 /*     */   {
-/*  80 */     if ((this.curData == null) && (this.startFileFlag)) {
-/*  81 */       this.startFileFlag = false;
-/*  82 */       this.prevData = this.reader1D.getLine();
-/*  83 */       if (this.prevData == null) {
-/*  84 */         System.out.println("No data in Daily File");
-/*  85 */         return;
+/*  63 */     if ((this.cur1DData == null) && (this.startFileFlag)) {
+/*  64 */       this.startFileFlag = false;
+/*     */       
+/*  66 */       this.dataDriver.updateData();
+/*  67 */       this.dataDriver.updateDataViewers();
+/*     */       
+/*  69 */       DataTypeViewer dailyDataTypeViewer = (DataTypeViewer)this.dataDriver.dataTypeViewerMap.get("1D");
+/*  70 */       ContractData dailyContractData = ((ScripDataViewer)dailyDataTypeViewer.scripDataViewerMap.get(this.scrip.scripID)).contractData;
+/*  71 */       this.prev1DData = dailyContractData.contract;
+/*     */       
+/*  73 */       DataTypeViewer metaDtaTypeViewer = (DataTypeViewer)this.dataDriver.dataTypeViewerMap.get("MD");
+/*  74 */       this.prevMDData = ((ScripDataViewer)metaDtaTypeViewer.scripDataViewerMap.get(this.scrip.scripID)).metaData;
+/*     */       
+/*  76 */       if (this.prev1DData == null) {
+/*  77 */         System.out.println("No data in Daily File");
+/*  78 */         return;
+/*     */       }
+/*  80 */       if (this.prevMDData == null) {
+/*  81 */         System.out.println("No data in Metadata File");
+/*  82 */         return;
 /*     */       }
 /*     */     }
-/*  88 */     if (this.currentDate.longValue() > dataDate.longValue())
-/*  89 */       return;
-/*  90 */     if (this.currentDate.longValue() == dataDate.longValue()) {
-/*  91 */       assignData(dataDate, cd);
-/*  92 */       this.mtmDate = dataDate;
-/*  93 */       this.prevData = this.curData;
-/*  94 */       return; }
-/*  95 */     if (dataDate.longValue() == 99999999L) {
-/*  96 */       assignData(dataDate, cd);
-/*  97 */       return;
+/*     */   }
+/*     */   
+/*     */   private void updateDataDriver()
+/*     */   {
+/*  89 */     this.dataDriver.updateDataViewers();
+/*  90 */     DataTypeViewer dailyDataTypeViewer = (DataTypeViewer)this.dataDriver.dataTypeViewerMap.get("1D");
+/*  91 */     ContractData dailyContractData = ((ScripDataViewer)dailyDataTypeViewer.scripDataViewerMap.get(this.scrip.scripID)).contractData;
+/*  92 */     this.cur1DData = dailyContractData.contract;
+/*     */     
+/*  94 */     DataTypeViewer metaDtaTypeViewer = (DataTypeViewer)this.dataDriver.dataTypeViewerMap.get("MD");
+/*  95 */     this.curMDData = ((ScripDataViewer)metaDtaTypeViewer.scripDataViewerMap.get(this.scrip.scripID)).metaData;
+/*     */     
+/*  97 */     this.currentDate = this.dataDriver.curDate;
+/*     */   }
+/*     */   
+/*     */   public void process(Long dataDate, CandleData data) throws Exception
+/*     */   {
+/* 102 */     process(dataDate, data, null);
+/*     */   }
+/*     */   
+/*     */   public void process(Long dataDate, CandleData data, Double mtm) throws Exception {
+/* 106 */     processFirstDateData();
+/* 107 */     if (this.currentDate.longValue() > dataDate.longValue())
+/* 108 */       return;
+/* 109 */     if (this.currentDate.longValue() == dataDate.longValue()) {
+/* 110 */       assignData(dataDate, data, mtm);
+/* 111 */       if (data.getClass() == CandleData.class) {
+/* 112 */         this.mtmDate = dataDate;
+/* 113 */         this.prev1DData = this.cur1DData;
+/* 114 */         this.prevMDData = this.curMDData;
+/*     */       }
+/* 116 */       return; }
+/* 117 */     if (dataDate.longValue() == 99999999L) {
+/* 118 */       assignData(dataDate, data, mtm);
+/* 119 */       return;
 /*     */     }
-/*     */     try {
-/*     */       do {
-/* 101 */         this.currentDate = Long.valueOf(Long.parseLong(this.curData[0]));
-/* 102 */         if (this.currentDate.longValue() < dataDate.longValue()) {
-/* 103 */           this.prevData = this.curData;
-/*     */         } else {
-/* 105 */           if (this.currentDate.longValue() == dataDate.longValue()) {
-/* 106 */             assignData(dataDate, cd);
-/* 107 */             this.mtmDate = dataDate;
-/* 108 */             this.prevData = this.curData;
-/* 109 */             return;
+/*     */     
+/*     */ 
+/* 123 */     while (this.dataDriver.updateData()) {
+/* 124 */       updateDataDriver();
+/*     */       
+/* 126 */       if (this.currentDate.longValue() < dataDate.longValue()) {
+/* 127 */         this.prev1DData = this.cur1DData;
+/* 128 */         this.prevMDData = this.curMDData;
+/*     */ 
+/*     */       }
+/*     */       else
+/*     */       {
+/* 133 */         if (this.currentDate.longValue() == dataDate.longValue())
+/*     */         {
+/* 135 */           assignData(dataDate, data, mtm);
+/* 136 */           if (data.getClass() == CandleData.class)
+/*     */           {
+/* 138 */             this.mtmDate = dataDate;
+/* 139 */             this.prev1DData = this.cur1DData;
+/* 140 */             this.prevMDData = this.curMDData;
 /*     */           }
-/* 111 */           return;
 /*     */         }
-/* 100 */       } while ((this.curData = this.reader1D.getLine()) != null);
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
+/* 143 */         return;
+/*     */       }
 /*     */     }
-/*     */     catch (Exception e)
+/*     */   }
+/*     */   
+/*     */   private void assignData(Long dataDate, CandleData data, Double mtm)
+/*     */   {
+/* 150 */     HashMap<String, String> metaDataMap = new HashMap();
+/*     */     
+/* 152 */     Boolean rollOver = Boolean.valueOf(this.prev1DData.rolloverCl.doubleValue() != -1.0D);
+/*     */     Double roDiff;
+/*     */     Double roDiff;
+/* 155 */     if (rollOver.booleanValue()) {
+/* 156 */       roDiff = Double.valueOf(this.prev1DData.rolloverCl.doubleValue() - this.prev1DData.cl.doubleValue());
+/*     */     } else {
+/* 158 */       roDiff = Double.valueOf(0.0D);
+/*     */     }
+/* 160 */     metaDataMap = this.prevMDData.dataMap;
+/*     */     
+/* 162 */     if (data.getClass().equals(CandleData.class))
 /*     */     {
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/* 115 */       System.out.println();
+/* 164 */       data.updateData(this.prev1DData.op, this.prev1DData.hi, this.prev1DData.lo, this.prev1DData.cl, this.prev1DData.vol, roDiff, rollOver, 
+/* 165 */         dataDate, this.prev1DData.exp, this.prev1DData.actualExp, this.prev1DData.rolloverExp, metaDataMap);
 /*     */     }
-/*     */   }
-/*     */   
-/*     */   private void assignData(Long dataDate, DailyData dd, Double mtm) {
-/* 120 */     if (dataDate.equals(Long.valueOf(20011129L)))
-/* 121 */       System.out.println();
-/*     */     try {
-/* 123 */       Boolean rollOver = Boolean.valueOf(Double.parseDouble(this.prevData[8]) != -1.0D);
-/*     */       
-/*     */ 
-/*     */       Double roDiff;
-/*     */       
-/*     */       Double roDiff;
-/*     */       
-/* 130 */       if (rollOver.booleanValue()) {
-/* 131 */         roDiff = Double.valueOf(Double.parseDouble(this.prevData[8]) - Double.parseDouble(this.prevData[5]));
-/*     */       } else {
-/* 133 */         roDiff = Double.valueOf(0.0D);
-/*     */       }
-/* 135 */       dd.updateData(Double.valueOf(Double.parseDouble(this.prevData[2])), 
-/* 136 */         Double.valueOf(Double.parseDouble(this.prevData[3])), 
-/* 137 */         Double.valueOf(Double.parseDouble(this.prevData[4])), 
-/* 138 */         Double.valueOf(Double.parseDouble(this.prevData[5])), 
-/* 139 */         Double.valueOf(Double.parseDouble(this.prevData[6])), roDiff, rollOver, 
-/* 140 */         dataDate, mtm);
-/*     */     } catch (Exception e) {
-/* 142 */       System.out.println(dataDate);
-/* 143 */       Double vol = Double.valueOf(0.0D);
-/*     */       try {
-/* 145 */         vol = Double.valueOf(Double.parseDouble(this.prevData[5]));
-/*     */       }
-/*     */       catch (Exception localException1) {}
-/* 148 */       dd.updateData(Double.valueOf(Double.parseDouble(this.prevData[2])), 
-/* 149 */         Double.valueOf(Double.parseDouble(this.prevData[3])), 
-/* 150 */         Double.valueOf(Double.parseDouble(this.prevData[4])), 
-/* 151 */         Double.valueOf(Double.parseDouble(this.prevData[5])), vol, Double.valueOf(0.0D), Boolean.valueOf(false), dataDate, 
-/* 152 */         mtm);
+/* 167 */     else if (data.getClass().equals(DailyData.class))
+/*     */     {
+/* 169 */       data.updateData(this.prev1DData.op, this.prev1DData.hi, this.prev1DData.lo, this.prev1DData.cl, this.prev1DData.vol, roDiff, rollOver, 
+/* 170 */         dataDate, this.prev1DData.exp, this.prev1DData.actualExp, this.prev1DData.rolloverExp, mtm, metaDataMap);
 /*     */     }
-/*     */   }
-/*     */   
-/*     */   private void assignData(Long dataDate, CandleData cd) {
-/* 157 */     if (dataDate.equals(Long.valueOf(20011129L)))
-/* 158 */       System.out.println();
-/*     */     try {
-/* 160 */       Boolean rollOver = Boolean.valueOf(Double.parseDouble(this.prevData[8]) != -1.0D);
-/*     */       
-/*     */ 
-/*     */       Double roDiff;
-/*     */       
-/*     */       Double roDiff;
-/*     */       
-/* 167 */       if (rollOver.booleanValue()) {
-/* 168 */         roDiff = Double.valueOf(Double.parseDouble(this.prevData[8]) - Double.parseDouble(this.prevData[5]));
-/*     */       } else {
-/* 170 */         roDiff = Double.valueOf(0.0D);
-/*     */       }
-/* 172 */       cd.updateData(Double.valueOf(Double.parseDouble(this.prevData[2])), 
-/* 173 */         Double.valueOf(Double.parseDouble(this.prevData[3])), 
-/* 174 */         Double.valueOf(Double.parseDouble(this.prevData[4])), 
-/* 175 */         Double.valueOf(Double.parseDouble(this.prevData[5])), 
-/* 176 */         Double.valueOf(Double.parseDouble(this.prevData[6])), roDiff, rollOver, dataDate);
-/*     */     } catch (Exception e) {
-/* 178 */       System.out.println(dataDate);
-/* 179 */       Double vol = Double.valueOf(0.0D);
-/*     */       try {
-/* 181 */         vol = Double.valueOf(Double.parseDouble(this.prevData[5]));
-/*     */       }
-/*     */       catch (Exception localException1) {}
-/* 184 */       cd.updateData(Double.valueOf(Double.parseDouble(this.prevData[2])), 
-/* 185 */         Double.valueOf(Double.parseDouble(this.prevData[3])), 
-/* 186 */         Double.valueOf(Double.parseDouble(this.prevData[4])), 
-/* 187 */         Double.valueOf(Double.parseDouble(this.prevData[5])), vol, Double.valueOf(0.0D), Boolean.valueOf(false), dataDate);
-/*     */     }
+/*     */     else
+/*     */     {
+/* 174 */       System.err.println("Incoming class does not match with either DailyData or CandleData"); }
 /*     */   }
 /*     */   
 /*     */   public Long getPrevDate() {
-/* 192 */     return this.mtmDate;
-/*     */   }
-/*     */   
-/*     */   public void close() throws IOException {
-/* 196 */     this.reader1D.close();
+/* 178 */     return this.mtmDate;
 /*     */   }
 /*     */ }
 

@@ -38,33 +38,36 @@
 /*    */   {
 /* 39 */     for (Map.Entry<String, Boolean> assetDecisionMap : result.entrySet())
 /*    */     {
-/* 41 */       String assetName = (String)assetDecisionMap.getKey();
-/* 42 */       Boolean decision = (Boolean)assetDecisionMap.getValue();
+/*    */ 
+/* 42 */       String assetName = (String)assetDecisionMap.getKey();
+/* 43 */       Boolean decision = (Boolean)assetDecisionMap.getValue();
 /*    */       
-/* 44 */       TreeMap<Long, Boolean> timeStampDecisionMap = (TreeMap)this.assetTimeStampDecisionMap.get(assetName);
+/*    */ 
+/*    */ 
+/* 47 */       TreeMap<Long, Boolean> timeStampDecisionMap = (TreeMap)this.assetTimeStampDecisionMap.get(assetName);
 /*    */       
-/* 46 */       if (timeStampDecisionMap == null) {
-/* 47 */         timeStampDecisionMap = new TreeMap();
+/* 49 */       if (timeStampDecisionMap == null) {
+/* 50 */         timeStampDecisionMap = new TreeMap();
 /*    */       }
-/* 49 */       timeStampDecisionMap.put(tradeTS, decision);
-/* 50 */       this.assetTimeStampDecisionMap.put(assetName, timeStampDecisionMap);
+/* 52 */       timeStampDecisionMap.put(tradeTS, decision);
+/* 53 */       this.assetTimeStampDecisionMap.put(assetName, timeStampDecisionMap);
 /*    */       try {
-/* 52 */         this.decisionFileWriter.writeLine(tradeTS + "," + assetName + "," + decision);
+/* 55 */         this.decisionFileWriter.writeLine(tradeTS + "," + assetName + "," + decision);
 /*    */       }
 /*    */       catch (IOException e) {
-/* 55 */         System.out.println("Unable to write ML Decisions");
-/* 56 */         throw new Exception();
+/* 58 */         System.out.println("Unable to write ML Decisions");
+/* 59 */         throw new Exception();
 /*    */       }
 /*    */     }
 /*    */   }
 /*    */   
 /*    */   public void closeWriter() throws IOException
 /*    */   {
-/* 63 */     this.decisionFileWriter.close();
+/* 66 */     this.decisionFileWriter.close();
 /*    */   }
 /*    */   
 /*    */   public HashMap<String, TreeMap<Long, Boolean>> getAssetTimeStampDecisionMap() {
-/* 67 */     return this.assetTimeStampDecisionMap;
+/* 70 */     return this.assetTimeStampDecisionMap;
 /*    */   }
 /*    */ }
 
