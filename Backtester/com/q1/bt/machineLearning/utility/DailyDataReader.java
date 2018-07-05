@@ -94,88 +94,89 @@
 /*  94 */     DataTypeViewer metaDtaTypeViewer = (DataTypeViewer)this.dataDriver.dataTypeViewerMap.get("MD");
 /*  95 */     this.curMDData = ((ScripDataViewer)metaDtaTypeViewer.scripDataViewerMap.get(this.scrip.scripID)).metaData;
 /*     */     
-/*  97 */     this.currentDate = this.dataDriver.curDate;
+/*  97 */     this.currentDate = dailyDataTypeViewer.date;
 /*     */   }
 /*     */   
-/*     */   public void process(Long dataDate, CandleData data) throws Exception
+/*     */   public void process(Long dataDate, CandleData data)
+/*     */     throws Exception
 /*     */   {
-/* 102 */     process(dataDate, data, null);
+/* 103 */     process(dataDate, data, null);
 /*     */   }
 /*     */   
 /*     */   public void process(Long dataDate, CandleData data, Double mtm) throws Exception {
-/* 106 */     processFirstDateData();
-/* 107 */     if (this.currentDate.longValue() > dataDate.longValue())
-/* 108 */       return;
-/* 109 */     if (this.currentDate.longValue() == dataDate.longValue()) {
-/* 110 */       assignData(dataDate, data, mtm);
-/* 111 */       if (data.getClass() == CandleData.class) {
-/* 112 */         this.mtmDate = dataDate;
-/* 113 */         this.prev1DData = this.cur1DData;
-/* 114 */         this.prevMDData = this.curMDData;
+/* 107 */     processFirstDateData();
+/* 108 */     if (this.currentDate.longValue() > dataDate.longValue())
+/* 109 */       return;
+/* 110 */     if (this.currentDate.longValue() == dataDate.longValue()) {
+/* 111 */       assignData(dataDate, data, mtm);
+/* 112 */       if (data.getClass() == CandleData.class) {
+/* 113 */         this.mtmDate = dataDate;
+/* 114 */         this.prev1DData = this.cur1DData;
+/* 115 */         this.prevMDData = this.curMDData;
 /*     */       }
-/* 116 */       return; }
-/* 117 */     if (dataDate.longValue() == 99999999L) {
-/* 118 */       assignData(dataDate, data, mtm);
-/* 119 */       return;
+/* 117 */       return; }
+/* 118 */     if (dataDate.longValue() == 99999999L) {
+/* 119 */       assignData(dataDate, data, mtm);
+/* 120 */       return;
 /*     */     }
 /*     */     
 /*     */ 
-/* 123 */     while (this.dataDriver.updateData()) {
-/* 124 */       updateDataDriver();
+/* 124 */     while (this.dataDriver.updateData()) {
+/* 125 */       updateDataDriver();
 /*     */       
-/* 126 */       if (this.currentDate.longValue() < dataDate.longValue()) {
-/* 127 */         this.prev1DData = this.cur1DData;
-/* 128 */         this.prevMDData = this.curMDData;
+/* 127 */       if (this.currentDate.longValue() < dataDate.longValue()) {
+/* 128 */         this.prev1DData = this.cur1DData;
+/* 129 */         this.prevMDData = this.curMDData;
 /*     */ 
 /*     */       }
 /*     */       else
 /*     */       {
-/* 133 */         if (this.currentDate.longValue() == dataDate.longValue())
+/* 134 */         if (this.currentDate.longValue() == dataDate.longValue())
 /*     */         {
-/* 135 */           assignData(dataDate, data, mtm);
-/* 136 */           if (data.getClass() == CandleData.class)
+/* 136 */           assignData(dataDate, data, mtm);
+/* 137 */           if (data.getClass() == CandleData.class)
 /*     */           {
-/* 138 */             this.mtmDate = dataDate;
-/* 139 */             this.prev1DData = this.cur1DData;
-/* 140 */             this.prevMDData = this.curMDData;
+/* 139 */             this.mtmDate = dataDate;
+/* 140 */             this.prev1DData = this.cur1DData;
+/* 141 */             this.prevMDData = this.curMDData;
 /*     */           }
 /*     */         }
-/* 143 */         return;
+/* 144 */         return;
 /*     */       }
 /*     */     }
 /*     */   }
 /*     */   
 /*     */   private void assignData(Long dataDate, CandleData data, Double mtm)
 /*     */   {
-/* 150 */     HashMap<String, String> metaDataMap = new HashMap();
+/* 151 */     HashMap<String, String> metaDataMap = new HashMap();
 /*     */     
-/* 152 */     Boolean rollOver = Boolean.valueOf(this.prev1DData.rolloverCl.doubleValue() != -1.0D);
+/* 153 */     Boolean rollOver = Boolean.valueOf(this.prev1DData.rolloverCl.doubleValue() != -1.0D);
 /*     */     Double roDiff;
 /*     */     Double roDiff;
-/* 155 */     if (rollOver.booleanValue()) {
-/* 156 */       roDiff = Double.valueOf(this.prev1DData.rolloverCl.doubleValue() - this.prev1DData.cl.doubleValue());
+/* 156 */     if (rollOver.booleanValue()) {
+/* 157 */       roDiff = Double.valueOf(this.prev1DData.rolloverCl.doubleValue() - this.prev1DData.cl.doubleValue());
 /*     */     } else {
-/* 158 */       roDiff = Double.valueOf(0.0D);
+/* 159 */       roDiff = Double.valueOf(0.0D);
 /*     */     }
-/* 160 */     metaDataMap = this.prevMDData.dataMap;
+/* 161 */     metaDataMap = this.prevMDData.dataMap;
 /*     */     
-/* 162 */     if (data.getClass().equals(CandleData.class))
+/* 163 */     if (data.getClass().equals(CandleData.class))
 /*     */     {
-/* 164 */       data.updateData(this.prev1DData.op, this.prev1DData.hi, this.prev1DData.lo, this.prev1DData.cl, this.prev1DData.vol, roDiff, rollOver, 
-/* 165 */         dataDate, this.prev1DData.exp, this.prev1DData.actualExp, this.prev1DData.rolloverExp, metaDataMap);
+/* 165 */       data.updateData(this.prev1DData.op, this.prev1DData.hi, this.prev1DData.lo, this.prev1DData.cl, this.prev1DData.vol, roDiff, rollOver, 
+/* 166 */         dataDate, this.prev1DData.exp, this.prev1DData.actualExp, this.prev1DData.rolloverExp, metaDataMap);
 /*     */     }
-/* 167 */     else if (data.getClass().equals(DailyData.class))
+/* 168 */     else if (data.getClass().equals(DailyData.class))
 /*     */     {
-/* 169 */       data.updateData(this.prev1DData.op, this.prev1DData.hi, this.prev1DData.lo, this.prev1DData.cl, this.prev1DData.vol, roDiff, rollOver, 
-/* 170 */         dataDate, this.prev1DData.exp, this.prev1DData.actualExp, this.prev1DData.rolloverExp, mtm, metaDataMap);
+/* 170 */       data.updateData(this.prev1DData.op, this.prev1DData.hi, this.prev1DData.lo, this.prev1DData.cl, this.prev1DData.vol, roDiff, rollOver, 
+/* 171 */         dataDate, this.prev1DData.exp, this.prev1DData.actualExp, this.prev1DData.rolloverExp, mtm, metaDataMap);
 /*     */     }
 /*     */     else
 /*     */     {
-/* 174 */       System.err.println("Incoming class does not match with either DailyData or CandleData"); }
+/* 175 */       System.err.println("Incoming class does not match with either DailyData or CandleData"); }
 /*     */   }
 /*     */   
 /*     */   public Long getPrevDate() {
-/* 178 */     return this.mtmDate;
+/* 179 */     return this.mtmDate;
 /*     */   }
 /*     */ }
 
