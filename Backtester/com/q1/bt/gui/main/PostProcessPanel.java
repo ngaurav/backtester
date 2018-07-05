@@ -573,8 +573,8 @@
 /*     */ 
 /*     */     try
 /*     */     {
-/* 512 */       String postProcesPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.btObj.timeStamp + "/Post Process Data/" + this.strategyID + 
-/* 513 */         " " + this.scripListID;
+/* 512 */       String postProcesPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.btObj.timeStamp + 
+/* 513 */         "/Post Process Data/" + this.strategyID + " " + this.scripListID;
 /* 514 */       this.postProcessReader = new CSVReader(postProcesPath + "/" + this.scripID + " Post Process.csv", ',', 0);
 /* 515 */       this.postProcessHeader = this.postProcessReader.getLine();
 /*     */       
@@ -585,8 +585,8 @@
 /*     */       
 /*     */ 
 /* 523 */       String[] scripVal = this.scripID.split(" ");
-/* 524 */       String dataFilePath = this.btGlobal.loginParameter.getDataPath() + "/" + scripVal[4] + "/" + scripVal[0] + " " + scripVal[1] + " " + 
-/* 525 */         scripVal[2] + " " + scripVal[3] + " " + this.strategyID.split("_")[1] + ".csv";
+/* 524 */       String dataFilePath = this.btGlobal.loginParameter.getDataPath() + "/" + scripVal[4] + "/" + scripVal[0] + " " + 
+/* 525 */         scripVal[1] + " " + scripVal[2] + " " + scripVal[3] + " " + this.strategyID.split("_")[1] + ".csv";
 /*     */       
 /*     */ 
 /* 528 */       this.dataReader = new CSVReader(dataFilePath, ',', 0);
@@ -597,8 +597,8 @@
 /* 533 */         this.dataIndexMap.put(header, Integer.valueOf(i++));
 /*     */       }
 /*     */       
-/* 536 */       String tradeBookPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.btObj.timeStamp + "/Trade Data/" + this.strategyID + " " + 
-/* 537 */         this.scripListID;
+/* 536 */       String tradeBookPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.btObj.timeStamp + "/Trade Data/" + 
+/* 537 */         this.strategyID + " " + this.scripListID;
 /* 538 */       this.tradeBookReader = new CSVReader(tradeBookPath + "/" + this.scripID + " Tradebook.csv", ',', 0);
 /*     */     }
 /*     */     catch (IOException e) {
@@ -762,40 +762,48 @@
 /* 698 */     String scripListID = this.scripListBox.getSelectedItem().toString();
 /*     */     
 /*     */ 
-/* 701 */     TreeSet<String> selectableScripSet = this.btGlobal.resultDriver.getSelectableScripSet(scripListID);
+/* 701 */     TreeSet<String> selectableAssetClassSet = this.btGlobal.resultDriver.getSelectableAssetClassSet(scripListID);
+/* 702 */     TreeSet<String> selectableScripSet = new TreeSet();
+/* 703 */     TreeSet<String> newScripSet; for (String assetClassID : selectableAssetClassSet) {
+/* 704 */       newScripSet = this.btGlobal.resultDriver.getSelectableScripSet(assetClassID);
+/* 705 */       if (newScripSet != null)
+/*     */       {
+/*     */ 
+/* 708 */         selectableScripSet.addAll(newScripSet);
+/*     */       }
+/*     */     }
+/*     */     
+/* 712 */     DefaultComboBoxModel<String> scripModel = (DefaultComboBoxModel)this.scripBox.getModel();
+/* 713 */     scripModel.removeAllElements();
 /*     */     
 /*     */ 
-/* 704 */     DefaultComboBoxModel<String> scripModel = (DefaultComboBoxModel)this.scripBox.getModel();
-/* 705 */     scripModel.removeAllElements();
-/*     */     
-/*     */ 
-/* 708 */     for (String scripID : selectableScripSet) {
-/* 709 */       scripModel.addElement(scripID);
+/* 716 */     for (String scripID : selectableScripSet) {
+/* 717 */       scripModel.addElement(scripID);
 /*     */     }
 /*     */   }
 /*     */   
 /*     */ 
 /*     */   public void updateGUIForScrip()
 /*     */   {
-/* 716 */     if (this.scripBox.getSelectedItem() == null) {
-/* 717 */       return;
+/* 724 */     if (this.scripBox.getSelectedItem() == null) {
+/* 725 */       return;
 /*     */     }
 /*     */     
-/* 720 */     String scripID = this.scripBox.getSelectedItem().toString();
+/* 728 */     String scripID = this.scripBox.getSelectedItem().toString();
 /*     */     
 /*     */ 
-/* 723 */     TreeSet<Long> selectableDateSet = this.btGlobal.resultDriver.getSelectableDateSet(scripID);
+/* 731 */     TreeSet<Long> selectableDateSet = this.btGlobal.resultDriver.getSelectableDateSet(scripID);
 /*     */     
 /*     */ 
-/* 726 */     DefaultComboBoxModel<Long> startDateModel = (DefaultComboBoxModel)this.startDateBox.getModel();
-/* 727 */     DefaultComboBoxModel<Long> endDateModel = (DefaultComboBoxModel)this.endDateBox.getModel();
-/* 728 */     startDateModel.removeAllElements();
-/* 729 */     endDateModel.removeAllElements();
+/* 734 */     DefaultComboBoxModel<Long> startDateModel = (DefaultComboBoxModel)this.startDateBox.getModel();
+/* 735 */     DefaultComboBoxModel<Long> endDateModel = (DefaultComboBoxModel)this.endDateBox.getModel();
+/* 736 */     startDateModel.removeAllElements();
+/* 737 */     endDateModel.removeAllElements();
 /*     */     
 /*     */ 
-/* 732 */     for (Long date : selectableDateSet) {
-/* 733 */       startDateModel.addElement(date);
-/* 734 */       endDateModel.addElement(date);
+/* 740 */     for (Long date : selectableDateSet) {
+/* 741 */       startDateModel.addElement(date);
+/* 742 */       endDateModel.addElement(date);
 /*     */     }
 /*     */   }
 /*     */   
@@ -803,37 +811,37 @@
 /*     */   public void generateResultsForSelectedDates()
 /*     */     throws Exception
 /*     */   {
-/* 742 */     if (this.startDateBox.getSelectedItem() == null) {
-/* 743 */       return;
+/* 750 */     if (this.startDateBox.getSelectedItem() == null) {
+/* 751 */       return;
 /*     */     }
-/* 745 */     if (this.endDateBox.getSelectedItem() == null) {
-/* 746 */       return;
+/* 753 */     if (this.endDateBox.getSelectedItem() == null) {
+/* 754 */       return;
 /*     */     }
 /*     */     
-/* 749 */     long startDate = ((Long)this.startDateBox.getSelectedItem()).longValue();
-/* 750 */     long endDate = ((Long)this.endDateBox.getSelectedItem()).longValue();
-/*     */     
-/*     */ 
-/* 753 */     if (startDate > endDate) {
-/* 754 */       this.endDateBox.setSelectedItem(Long.valueOf(startDate));
-/* 755 */       generateResultsForSelectedDates();
-/* 756 */       return;
-/*     */     }
+/* 757 */     long startDate = ((Long)this.startDateBox.getSelectedItem()).longValue();
+/* 758 */     long endDate = ((Long)this.endDateBox.getSelectedItem()).longValue();
 /*     */     
 /*     */ 
-/* 760 */     initializePostProcessComponents();
+/* 761 */     if (startDate > endDate) {
+/* 762 */       this.endDateBox.setSelectedItem(Long.valueOf(startDate));
+/* 763 */       generateResultsForSelectedDates();
+/* 764 */       return;
+/*     */     }
+/*     */     
+/*     */ 
+/* 768 */     initializePostProcessComponents();
 /*     */   }
 /*     */   
 /*     */ 
 /*     */ 
 /*     */   public void updateGUIforStartDate()
 /*     */   {
-/* 767 */     if (this.startDateBox.getSelectedItem() == null) {
-/* 768 */       return;
+/* 775 */     if (this.startDateBox.getSelectedItem() == null) {
+/* 776 */       return;
 /*     */     }
 /*     */     
-/* 771 */     long startDate = ((Long)this.startDateBox.getSelectedItem()).longValue();
-/* 772 */     this.endDateBox.setSelectedItem(Long.valueOf(startDate));
+/* 779 */     long startDate = ((Long)this.startDateBox.getSelectedItem()).longValue();
+/* 780 */     this.endDateBox.setSelectedItem(Long.valueOf(startDate));
 /*     */   }
 /*     */   
 /*     */ 
@@ -841,14 +849,14 @@
 /*     */   public void initialize(Backtest btObj, ResultDriver resultDriver)
 /*     */     throws Exception
 /*     */   {
-/* 780 */     this.btObj = btObj;
-/* 781 */     this.resultDriver = resultDriver;
+/* 788 */     this.btObj = btObj;
+/* 789 */     this.resultDriver = resultDriver;
 /*     */     
 /*     */ 
-/* 784 */     updateGUI();
+/* 792 */     updateGUI();
 /*     */     
 /*     */ 
-/* 787 */     initializePostProcessComponents();
+/* 795 */     initializePostProcessComponents();
 /*     */   }
 /*     */ }
 

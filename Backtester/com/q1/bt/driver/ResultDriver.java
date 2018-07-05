@@ -252,39 +252,41 @@
 /*      */ 
 /*  234 */         Object scripMap = 
 /*  235 */           (TreeMap)((TreeMap)((TreeMap)this.resultsFileMap.get(curStrategyID)).get(curScripListID)).get(curAssetClassID);
-/*      */         
-/*  237 */         String mtmFilePath = (String)((TreeMap)scripMap).get(scripID);
-/*      */         try {
-/*  239 */           CSVReader reader = new CSVReader(mtmFilePath, ',', 0);
-/*      */           String[] dataLine;
-/*  241 */           while ((dataLine = reader.getLine()) != null) { String[] dataLine;
-/*  242 */             selectableDateSet.add(Long.valueOf(Long.parseLong(dataLine[0])));
+/*  236 */         if (scripMap != null)
+/*      */         {
+/*      */ 
+/*  239 */           String mtmFilePath = (String)((TreeMap)scripMap).get(scripID);
+/*      */           try {
+/*  241 */             CSVReader reader = new CSVReader(mtmFilePath, ',', 0);
+/*      */             String[] dataLine;
+/*  243 */             while ((dataLine = reader.getLine()) != null) { String[] dataLine;
+/*  244 */               selectableDateSet.add(Long.valueOf(Long.parseLong(dataLine[0])));
+/*      */             }
 /*      */           }
+/*      */           catch (Exception localException1) {}
+/*      */           
+/*  249 */           this.scripSet.add(scripID);
 /*      */         }
-/*      */         catch (Exception localException1) {}
-/*      */         
-/*  247 */         this.scripSet.add(scripID);
 /*      */       }
 /*      */     }
 /*      */     
-/*      */ 
-/*  252 */     this.outputKey = (this.outputKey + "|" + scripID);
+/*  254 */     this.outputKey = (this.outputKey + "|" + scripID);
 /*      */     
-/*  254 */     return selectableDateSet;
+/*  256 */     return selectableDateSet;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */ 
 /*      */   public void updateSetsForKeys(String strategyKey, String scripListKey, String assetClassKey, String scripKey)
 /*      */   {
-/*  261 */     getSelectableScripListSet(strategyKey);
-/*  262 */     getSelectableAssetClassSet(scripListKey);
-/*  263 */     getSelectableScripSet(assetClassKey);
-/*  264 */     getSelectableDateSet(scripKey);
+/*  263 */     getSelectableScripListSet(strategyKey);
+/*  264 */     getSelectableAssetClassSet(scripListKey);
+/*  265 */     getSelectableScripSet(assetClassKey);
+/*  266 */     getSelectableDateSet(scripKey);
 /*      */     
 /*      */ 
-/*  267 */     this.startDate = 0L;
-/*  268 */     this.endDate = 20910101L;
+/*  269 */     this.startDate = 0L;
+/*  270 */     this.endDate = 20910101L;
 /*      */   }
 /*      */   
 /*      */ 
@@ -292,13 +294,13 @@
 /*      */   public PostProcess createPostProcessObject()
 /*      */     throws Exception
 /*      */   {
-/*  276 */     TreeMap<Long, Double> mtmMap = generateMTMMap();
+/*  278 */     TreeMap<Long, Double> mtmMap = generateMTMMap();
 /*      */     
 /*      */ 
-/*  279 */     ArrayList<String[]> tradeBook = generateTradebook();
+/*  281 */     ArrayList<String[]> tradeBook = generateTradebook();
 /*      */     
 /*      */ 
-/*  282 */     return new PostProcess(mtmMap, this.outputKey, tradeBook, this.btGlobal, this.postProcessMode);
+/*  284 */     return new PostProcess(mtmMap, this.outputKey, tradeBook, this.btGlobal, this.postProcessMode);
 /*      */   }
 /*      */   
 /*      */ 
@@ -306,29 +308,29 @@
 /*      */   public void generateResults(String strategyID, String scripListID, String scripID, boolean exportResultsCheck)
 /*      */     throws Exception
 /*      */   {
-/*  290 */     String filePath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results";
-/*  291 */     if (!new File(filePath).exists()) {
-/*  292 */       new File(filePath).mkdirs();
+/*  292 */     String filePath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results";
+/*  293 */     if (!new File(filePath).exists()) {
+/*  294 */       new File(filePath).mkdirs();
 /*      */     }
 /*      */     
-/*  295 */     generateResults(this.startDate, this.endDate);
+/*  297 */     generateResults(this.startDate, this.endDate);
 /*      */     
 /*      */     try
 /*      */     {
-/*  299 */       exportAllResults(exportResultsCheck, true);
+/*  301 */       exportAllResults(exportResultsCheck, true);
 /*      */     }
 /*      */     catch (Exception e) {
-/*  302 */       e.printStackTrace();
-/*  303 */       return;
+/*  304 */       e.printStackTrace();
+/*  305 */       return;
 /*      */     }
 /*      */     
 /*      */     try
 /*      */     {
-/*  308 */       this.btGlobal.displayRunParameters(this.timeStamp);
+/*  310 */       this.btGlobal.displayRunParameters(this.timeStamp);
 /*      */     }
 /*      */     catch (IOException e) {
-/*  311 */       this.btGlobal.displayMessage("Error displaying last run parameters");
-/*  312 */       e.printStackTrace();
+/*  313 */       this.btGlobal.displayMessage("Error displaying last run parameters");
+/*  314 */       e.printStackTrace();
 /*      */     }
 /*      */   }
 /*      */   
@@ -337,34 +339,34 @@
 /*      */   public void generateResults(long startDate, long endDate)
 /*      */     throws Exception
 /*      */   {
-/*  321 */     this.startDate = startDate;
-/*  322 */     this.endDate = endDate;
+/*  323 */     this.startDate = startDate;
+/*  324 */     this.endDate = endDate;
 /*      */     
 /*      */ 
-/*  325 */     PostProcess ppObj = createPostProcessObject();
+/*  327 */     PostProcess ppObj = createPostProcessObject();
 /*      */     
 /*      */     try
 /*      */     {
-/*  329 */       ppObj.runPostprocess();
+/*  331 */       ppObj.runPostprocess();
 /*      */     }
 /*      */     catch (ParseException e) {
-/*  332 */       this.btGlobal.displayMessage("Error running post process");
-/*  333 */       e.printStackTrace();
+/*  334 */       this.btGlobal.displayMessage("Error running post process");
+/*  335 */       e.printStackTrace();
 /*      */     }
 /*      */     
 /*      */ 
-/*  337 */     this.btGlobal.displayResults(ppObj);
+/*  339 */     this.btGlobal.displayResults(ppObj);
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public void exportAllResults(boolean exportResultsCheck, boolean isGui)
 /*      */     throws Exception
 /*      */   {
-/*  344 */     if (exportResultsCheck)
+/*  346 */     if (exportResultsCheck)
 /*      */     {
-/*  346 */       Iterator localIterator1 = this.resultsFileMap.entrySet().iterator();
+/*  348 */       Iterator localIterator1 = this.resultsFileMap.entrySet().iterator();
 /*      */       Iterator localIterator2;
-/*  345 */       for (; localIterator1.hasNext(); 
+/*  347 */       for (; localIterator1.hasNext(); 
 /*      */           
 /*      */ 
 /*      */ 
@@ -372,48 +374,48 @@
 /*      */ 
 /*      */ 
 /*      */ 
-/*  353 */           localIterator2.hasNext())
+/*  355 */           localIterator2.hasNext())
 /*      */       {
-/*  346 */         Map.Entry<String, TreeMap<String, TreeMap<String, TreeMap<String, String>>>> strategyEntry = (Map.Entry)localIterator1.next();
+/*  348 */         Map.Entry<String, TreeMap<String, TreeMap<String, TreeMap<String, String>>>> strategyEntry = (Map.Entry)localIterator1.next();
 /*      */         
 /*      */ 
-/*  349 */         String strategyID = (String)strategyEntry.getKey();
-/*  350 */         exportResultsForKey(strategyID, "All", "All", "All");
+/*  351 */         String strategyID = (String)strategyEntry.getKey();
+/*  352 */         exportResultsForKey(strategyID, "All", "All", "All");
 /*      */         
-/*  352 */         TreeMap<String, TreeMap<String, TreeMap<String, String>>> scripListMap = (TreeMap)strategyEntry.getValue();
-/*  353 */         localIterator2 = scripListMap.entrySet().iterator(); continue;Map.Entry<String, TreeMap<String, TreeMap<String, String>>> scripListEntry = (Map.Entry)localIterator2.next();
+/*  354 */         TreeMap<String, TreeMap<String, TreeMap<String, String>>> scripListMap = (TreeMap)strategyEntry.getValue();
+/*  355 */         localIterator2 = scripListMap.entrySet().iterator(); continue;Map.Entry<String, TreeMap<String, TreeMap<String, String>>> scripListEntry = (Map.Entry)localIterator2.next();
 /*      */         
 /*      */ 
-/*  356 */         String scripListID = (String)scripListEntry.getKey();
-/*  357 */         exportResultsForKey(strategyID, scripListID, "All", "All");
+/*  358 */         String scripListID = (String)scripListEntry.getKey();
+/*  359 */         exportResultsForKey(strategyID, scripListID, "All", "All");
 /*      */         
-/*  359 */         TreeMap<String, TreeMap<String, String>> assetClassMap = (TreeMap)scripListEntry.getValue();
-/*  360 */         Iterator localIterator4; for (Iterator localIterator3 = assetClassMap.entrySet().iterator(); localIterator3.hasNext(); 
+/*  361 */         TreeMap<String, TreeMap<String, String>> assetClassMap = (TreeMap)scripListEntry.getValue();
+/*  362 */         Iterator localIterator4; for (Iterator localIterator3 = assetClassMap.entrySet().iterator(); localIterator3.hasNext(); 
 /*      */             
 /*      */ 
 /*      */ 
 /*      */ 
 /*      */ 
 /*      */ 
-/*  367 */             localIterator4.hasNext())
+/*  369 */             localIterator4.hasNext())
 /*      */         {
-/*  360 */           Map.Entry<String, TreeMap<String, String>> assetClassEntry = (Map.Entry)localIterator3.next();
+/*  362 */           Map.Entry<String, TreeMap<String, String>> assetClassEntry = (Map.Entry)localIterator3.next();
 /*      */           
 /*      */ 
-/*  363 */           String assetClassID = (String)assetClassEntry.getKey();
-/*  364 */           exportResultsForKey(strategyID, scripListID, assetClassID, "All");
+/*  365 */           String assetClassID = (String)assetClassEntry.getKey();
+/*  366 */           exportResultsForKey(strategyID, scripListID, assetClassID, "All");
 /*      */           
-/*  366 */           TreeMap<String, String> scripMap = (TreeMap)assetClassEntry.getValue();
-/*  367 */           localIterator4 = scripMap.keySet().iterator(); continue;String scripID = (String)localIterator4.next();
+/*  368 */           TreeMap<String, String> scripMap = (TreeMap)assetClassEntry.getValue();
+/*  369 */           localIterator4 = scripMap.keySet().iterator(); continue;String scripID = (String)localIterator4.next();
 /*      */           
 /*      */ 
-/*  370 */           exportResultsForKey(strategyID, scripListID, assetClassID, scripID);
+/*  372 */           exportResultsForKey(strategyID, scripListID, assetClassID, scripID);
 /*      */         }
 /*      */       }
 /*      */     }
 /*      */     
 /*      */ 
-/*  376 */     exportResultsForKey("All", "All", "All", "All");
+/*  378 */     exportResultsForKey("All", "All", "All", "All");
 /*      */   }
 /*      */   
 /*      */ 
@@ -422,18 +424,18 @@
 /*      */   public void generateAndExportResultsForKey(String strategyKey, String scripListKey, String assetClassKey, String scripKey)
 /*      */     throws Exception
 /*      */   {
-/*  385 */     updateSetsForKeys(strategyKey, scripListKey, assetClassKey, scripKey);
+/*  387 */     updateSetsForKeys(strategyKey, scripListKey, assetClassKey, scripKey);
 /*      */     
 /*      */ 
-/*  388 */     PostProcess ppObj = createPostProcessObject();
+/*  390 */     PostProcess ppObj = createPostProcessObject();
 /*      */     
 /*      */     try
 /*      */     {
-/*  392 */       ppObj.runPostprocess();
-/*  393 */       ppObj.printResults();
+/*  394 */       ppObj.runPostprocess();
+/*  395 */       ppObj.printResults();
 /*      */     }
 /*      */     catch (ParseException e) {
-/*  396 */       e.printStackTrace();
+/*  398 */       e.printStackTrace();
 /*      */     }
 /*      */   }
 /*      */   
@@ -443,45 +445,45 @@
 /*      */   public void exportResultsForKey(String strategyKey, String scripListKey, String assetClassKey, String scripKey)
 /*      */     throws Exception
 /*      */   {
-/*  406 */     updateSetsForKeys(strategyKey, scripListKey, assetClassKey, scripKey);
+/*  408 */     updateSetsForKeys(strategyKey, scripListKey, assetClassKey, scripKey);
 /*      */     
 /*      */ 
-/*  409 */     PostProcess ppObj = createPostProcessObject();
+/*  411 */     PostProcess ppObj = createPostProcessObject();
 /*      */     
 /*      */ 
-/*  412 */     if ((scripListKey.equals("All")) && (assetClassKey.equals("All")) && (scripKey.equals("All")))
+/*  414 */     if ((scripListKey.equals("All")) && (assetClassKey.equals("All")) && (scripKey.equals("All")))
 /*      */     {
 /*      */       try
 /*      */       {
-/*  416 */         String resultsPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results";
-/*  417 */         new File(resultsPath).mkdirs();
+/*  418 */         String resultsPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results";
+/*  419 */         new File(resultsPath).mkdirs();
 /*      */         
 /*      */ 
-/*  420 */         CSVWriter writer = null;
-/*  421 */         writer = new CSVWriter(resultsPath + "/" + strategyKey + " MTM.csv", false, ",");
-/*  422 */         for (Map.Entry<Long, Double> entry : ppObj.consolMTM.entrySet()) {
-/*  423 */           String[] outLine = { ((Long)entry.getKey()).toString(), ((Double)entry.getValue()).toString() };
-/*  424 */           writer.writeLine(outLine);
+/*  422 */         CSVWriter writer = null;
+/*  423 */         writer = new CSVWriter(resultsPath + "/" + strategyKey + " MTM.csv", false, ",");
+/*  424 */         for (Map.Entry<Long, Double> entry : ppObj.consolMTM.entrySet()) {
+/*  425 */           String[] outLine = { ((Long)entry.getKey()).toString(), ((Double)entry.getValue()).toString() };
+/*  426 */           writer.writeLine(outLine);
 /*      */         }
-/*  426 */         writer.close();
+/*  428 */         writer.close();
 /*      */         
 /*      */ 
-/*  429 */         writer = new CSVWriter(resultsPath + "/" + strategyKey + " Tradebook.csv", false, ",");
-/*  430 */         for (String[] trade : ppObj.tradeBook)
-/*  431 */           writer.writeLine(trade);
-/*  432 */         writer.close();
+/*  431 */         writer = new CSVWriter(resultsPath + "/" + strategyKey + " Tradebook.csv", false, ",");
+/*  432 */         for (String[] trade : ppObj.tradeBook)
+/*  433 */           writer.writeLine(trade);
+/*  434 */         writer.close();
 /*      */       }
 /*      */       catch (IOException e) {
-/*  435 */         e.printStackTrace();
+/*  437 */         e.printStackTrace();
 /*      */       }
 /*      */     }
 /*      */     
 /*      */     try
 /*      */     {
-/*  441 */       ppObj.runPostprocess();
-/*  442 */       ppObj.writeToFile(this.timeStamp);
+/*  443 */       ppObj.runPostprocess();
+/*  444 */       ppObj.writeToFile(this.timeStamp);
 /*      */     } catch (ParseException e) {
-/*  444 */       e.printStackTrace();
+/*  446 */       e.printStackTrace();
 /*      */     }
 /*      */   }
 /*      */   
@@ -492,186 +494,186 @@
 /*      */   public ArrayList<String[]> generateTradebook()
 /*      */     throws Exception
 /*      */   {
-/*  455 */     ArrayList<String[]> consolTradebook = new ArrayList();
+/*  457 */     ArrayList<String[]> consolTradebook = new ArrayList();
 /*      */     
 /*      */ 
-/*  458 */     for (String strategyID : this.strategySet)
+/*  460 */     for (String strategyID : this.strategySet)
 /*      */     {
 /*      */ 
-/*  461 */       ArrayList<String[]> strategyTradebook = new ArrayList();
+/*  463 */       ArrayList<String[]> strategyTradebook = new ArrayList();
 /*      */       
 /*      */ 
-/*  464 */       for (String scripListID : this.scripListSet)
+/*  466 */       for (String scripListID : this.scripListSet)
 /*      */       {
 /*      */ 
-/*  467 */         ArrayList<String[]> scripListTradebook = new ArrayList();
+/*  469 */         ArrayList<String[]> scripListTradebook = new ArrayList();
 /*      */         
 /*      */ 
-/*  470 */         for (String scripID : this.scripSet)
+/*  472 */         for (String scripID : this.scripSet)
 /*      */         {
 /*      */ 
-/*  473 */           if (checkIfResultExpected(strategyID, scripListID, scripID))
+/*  475 */           if (checkIfResultExpected(strategyID, scripListID, scripID))
 /*      */           {
 /*      */ 
-/*  476 */             ArrayList<String[]> scripTradebook = getStrategyScripListScripTradebook(strategyID, scripListID, 
-/*  477 */               scripID);
+/*  478 */             ArrayList<String[]> scripTradebook = getStrategyScripListScripTradebook(strategyID, scripListID, 
+/*  479 */               scripID);
 /*      */             
-/*  479 */             if (!this.postProcessMode.equals(PostProcessMode.Portfolio)) {
-/*  480 */               scripTradebook = cleanTradebookForRunningTrades(scripTradebook);
+/*  481 */             if (!this.postProcessMode.equals(PostProcessMode.Portfolio)) {
+/*  482 */               scripTradebook = cleanTradebookForRunningTrades(scripTradebook);
 /*      */             }
 /*      */             
 /*      */ 
-/*  484 */             scripListTradebook.addAll(scripTradebook);
+/*  486 */             scripListTradebook.addAll(scripTradebook);
 /*      */           }
 /*      */         }
 /*      */         
-/*  488 */         if (this.postProcessMode.equals(PostProcessMode.Spread)) {
-/*  489 */           scripListTradebook = timeSortTradebook(scripListTradebook);
+/*  490 */         if (this.postProcessMode.equals(PostProcessMode.Spread)) {
+/*  491 */           scripListTradebook = timeSortTradebook(scripListTradebook);
 /*      */         }
 /*      */         
 /*      */ 
-/*  493 */         strategyTradebook.addAll(scripListTradebook);
+/*  495 */         strategyTradebook.addAll(scripListTradebook);
 /*      */       }
 /*      */       
 /*      */ 
 /*      */ 
-/*  498 */       consolTradebook.addAll(strategyTradebook);
+/*  500 */       consolTradebook.addAll(strategyTradebook);
 /*      */     }
 /*      */     
-/*  501 */     return consolTradebook;
+/*  503 */     return consolTradebook;
 /*      */   }
 /*      */   
 /*      */   private ArrayList<String[]> timeSortTradebook(ArrayList<String[]> scripListTradebook) {
-/*  505 */     TreeMap<String, ArrayList<String[]>> tradeBookMap = new TreeMap();
+/*  507 */     TreeMap<String, ArrayList<String[]>> tradeBookMap = new TreeMap();
 /*      */     
 /*      */ 
-/*  508 */     for (String[] line : scripListTradebook) {
-/*  509 */       if (tradeBookMap.get(line[0]) == null) {
-/*  510 */         ArrayList<String[]> trades = new ArrayList();
-/*  511 */         trades.add(line);
-/*  512 */         tradeBookMap.put(line[0], trades);
+/*  510 */     for (String[] line : scripListTradebook) {
+/*  511 */       if (tradeBookMap.get(line[0]) == null) {
+/*  512 */         ArrayList<String[]> trades = new ArrayList();
+/*  513 */         trades.add(line);
+/*  514 */         tradeBookMap.put(line[0], trades);
 /*      */       } else {
-/*  514 */         trades = (ArrayList)tradeBookMap.get(line[0]);
-/*  515 */         trades.add(line);
-/*  516 */         tradeBookMap.put(line[0], trades);
+/*  516 */         trades = (ArrayList)tradeBookMap.get(line[0]);
+/*  517 */         trades.add(line);
+/*  518 */         tradeBookMap.put(line[0], trades);
 /*      */       }
 /*      */     }
 /*      */     
 /*      */ 
-/*  521 */     ArrayList<String[]> sortedTradeBook = new ArrayList();
+/*  523 */     ArrayList<String[]> sortedTradeBook = new ArrayList();
 /*      */     
 /*      */     Iterator localIterator2;
-/*  524 */     for (ArrayList<String[]> trades = tradeBookMap.keySet().iterator(); trades.hasNext(); 
+/*  526 */     for (ArrayList<String[]> trades = tradeBookMap.keySet().iterator(); trades.hasNext(); 
 /*      */         
-/*  526 */         localIterator2.hasNext())
+/*  528 */         localIterator2.hasNext())
 /*      */     {
-/*  524 */       String key = (String)trades.next();
-/*  525 */       ArrayList<String[]> trades = (ArrayList)tradeBookMap.get(key);
-/*  526 */       localIterator2 = trades.iterator(); continue;String[] line = (String[])localIterator2.next();
-/*  527 */       sortedTradeBook.add(line);
+/*  526 */       String key = (String)trades.next();
+/*  527 */       ArrayList<String[]> trades = (ArrayList)tradeBookMap.get(key);
+/*  528 */       localIterator2 = trades.iterator(); continue;String[] line = (String[])localIterator2.next();
+/*  529 */       sortedTradeBook.add(line);
 /*      */     }
 /*      */     
-/*  530 */     return sortedTradeBook;
+/*  532 */     return sortedTradeBook;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public ArrayList<String[]> getConsolTradebook()
 /*      */   {
-/*  536 */     String tbFolderPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Trade Data";
+/*  538 */     String tbFolderPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Trade Data";
 /*      */     
-/*  538 */     File tbFolderPathFile = new File(tbFolderPath);
-/*  539 */     File[] tbFolders = tbFolderPathFile.listFiles();
+/*  540 */     File tbFolderPathFile = new File(tbFolderPath);
+/*  541 */     File[] tbFolders = tbFolderPathFile.listFiles();
 /*      */     
-/*  541 */     ArrayList<String[]> consolTradeBook = new ArrayList();
+/*  543 */     ArrayList<String[]> consolTradeBook = new ArrayList();
 /*      */     
 /*      */     try
 /*      */     {
-/*  545 */       CSVWriter writer = null;
-/*  546 */       writer = new CSVWriter(
-/*  547 */         this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results/Consol Tradebook.csv", false, 
-/*  548 */         ",");
+/*  547 */       CSVWriter writer = null;
+/*  548 */       writer = new CSVWriter(
+/*  549 */         this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results/Consol Tradebook.csv", false, 
+/*  550 */         ",");
 /*      */       
 /*      */       File[] arrayOfFile1;
-/*  551 */       int j = (arrayOfFile1 = tbFolders).length; for (int i = 0; i < j; i++) { File tbFolder = arrayOfFile1[i];
+/*  553 */       int j = (arrayOfFile1 = tbFolders).length; for (int i = 0; i < j; i++) { File tbFolder = arrayOfFile1[i];
 /*      */         
 /*      */ 
-/*  554 */         String[] tbFolderVal = tbFolder.getName().split(" ");
+/*  556 */         String[] tbFolderVal = tbFolder.getName().split(" ");
 /*      */         
-/*  556 */         String strategyID = tbFolderVal[0];
-/*  557 */         String scripListID = tbFolderVal[1];
+/*  558 */         String strategyID = tbFolderVal[0];
+/*  559 */         String scripListID = tbFolderVal[1];
 /*      */         
 /*      */ 
-/*  560 */         if (tbFolderVal.length > 2) {
-/*  561 */           scripListID = 
-/*  562 */             tbFolderVal[1] + " " + tbFolderVal[2] + " " + tbFolderVal[3] + " " + tbFolderVal[4] + " " + tbFolderVal[5];
+/*  562 */         if (tbFolderVal.length > 2) {
+/*  563 */           scripListID = 
+/*  564 */             tbFolderVal[1] + " " + tbFolderVal[2] + " " + tbFolderVal[3] + " " + tbFolderVal[4] + " " + tbFolderVal[5];
 /*      */         }
 /*      */         
-/*  565 */         String tbPath = tbFolderPath + "/" + tbFolder.getName();
-/*  566 */         File tbPathFile = new File(tbPath);
-/*  567 */         File[] tbFiles = tbPathFile.listFiles();
+/*  567 */         String tbPath = tbFolderPath + "/" + tbFolder.getName();
+/*  568 */         File tbPathFile = new File(tbPath);
+/*  569 */         File[] tbFiles = tbPathFile.listFiles();
 /*      */         
 /*      */         File[] arrayOfFile2;
-/*  570 */         int m = (arrayOfFile2 = tbFiles).length; for (int k = 0; k < m; k++) { File tbFile = arrayOfFile2[k];
+/*  572 */         int m = (arrayOfFile2 = tbFiles).length; for (int k = 0; k < m; k++) { File tbFile = arrayOfFile2[k];
 /*      */           
-/*  572 */           String tbFileName = tbFile.getName();
-/*  573 */           String scripID = tbFileName.substring(0, tbFileName.length() - 14);
+/*  574 */           String tbFileName = tbFile.getName();
+/*  575 */           String scripID = tbFileName.substring(0, tbFileName.length() - 14);
 /*      */           
-/*  575 */           ArrayList<String[]> tradeBook = getStrategyScripListScripTradebook(strategyID, scripListID, 
-/*  576 */             scripID);
+/*  577 */           ArrayList<String[]> tradeBook = getStrategyScripListScripTradebook(strategyID, scripListID, 
+/*  578 */             scripID);
 /*      */           
-/*  578 */           for (String[] trade : tradeBook) {
-/*  579 */             String[] tradeOut = { trade[9], trade[10], trade[0], trade[1], trade[2], trade[3], trade[4], 
-/*  580 */               trade[5], trade[6], trade[7], trade[8] };
-/*  581 */             writer.writeLine(tradeOut);
+/*  580 */           for (String[] trade : tradeBook) {
+/*  581 */             String[] tradeOut = { trade[9], trade[10], trade[0], trade[1], trade[2], trade[3], trade[4], 
+/*  582 */               trade[5], trade[6], trade[7], trade[8] };
+/*  583 */             writer.writeLine(tradeOut);
 /*      */           }
 /*      */           
-/*  584 */           if (tradeBook.size() > 0) {
-/*  585 */             consolTradeBook.addAll(tradeBook);
+/*  586 */           if (tradeBook.size() > 0) {
+/*  587 */             consolTradeBook.addAll(tradeBook);
 /*      */           }
 /*      */         }
 /*      */       }
 /*      */       
-/*  590 */       writer.close();
+/*  592 */       writer.close();
 /*      */     }
 /*      */     catch (IOException e) {
-/*  593 */       e.printStackTrace();
+/*  595 */       e.printStackTrace();
 /*      */     }
-/*  595 */     return consolTradeBook;
+/*  597 */     return consolTradeBook;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */ 
 /*      */   public ArrayList<String[]> getStrategyScripListScripTradebook(String strategyID, String scripListID, String scripID)
 /*      */   {
-/*  602 */     ArrayList<String[]> tradeBook = new ArrayList();
-/*  603 */     String tbPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Trade Data";
-/*  604 */     String tbFilePath = tbPath + "/" + strategyID + " " + scripListID + "/" + scripID + " Tradebook.csv";
-/*  605 */     CSVReader reader = null;
+/*  604 */     ArrayList<String[]> tradeBook = new ArrayList();
+/*  605 */     String tbPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Trade Data";
+/*  606 */     String tbFilePath = tbPath + "/" + strategyID + " " + scripListID + "/" + scripID + " Tradebook.csv";
+/*  607 */     CSVReader reader = null;
 /*      */     try {
-/*  607 */       reader = new CSVReader(tbFilePath, ',', 0);
+/*  609 */       reader = new CSVReader(tbFilePath, ',', 0);
 /*      */       String[] dataLine;
-/*  609 */       while ((dataLine = reader.getLine()) != null) {
+/*  611 */       while ((dataLine = reader.getLine()) != null) {
 /*      */         String[] dataLine;
-/*  611 */         long date = Long.parseLong(dataLine[0]) / 1000000L;
+/*  613 */         long date = Long.parseLong(dataLine[0]) / 1000000L;
 /*      */         
 /*      */ 
-/*  614 */         if (date >= this.startDate)
+/*  616 */         if (date >= this.startDate)
 /*      */         {
 /*      */ 
 /*      */ 
-/*  618 */           if (date > this.endDate) {
+/*  620 */           if (date > this.endDate) {
 /*      */             break;
 /*      */           }
 /*      */           
-/*  622 */           tradeBook.add(dataLine);
+/*  624 */           tradeBook.add(dataLine);
 /*      */         }
 /*      */       }
-/*  625 */     } catch (IOException e1) { this.btGlobal.displayMessage("Could not find Tradebook: " + strategyID + " " + scripListID + " " + scripID);
-/*  626 */       e1.printStackTrace();
-/*  627 */       return null;
+/*  627 */     } catch (IOException e1) { this.btGlobal.displayMessage("Could not find Tradebook: " + strategyID + " " + scripListID + " " + scripID);
+/*  628 */       e1.printStackTrace();
+/*  629 */       return null;
 /*      */     }
 /*      */     
-/*  630 */     return tradeBook;
+/*  632 */     return tradeBook;
 /*      */   }
 /*      */   
 /*      */ 
@@ -680,180 +682,180 @@
 /*      */   public TreeMap<Long, Double> generateMTMMap()
 /*      */     throws Exception
 /*      */   {
-/*  639 */     TreeMap<Long, Double> consolMTMMap = new TreeMap();
+/*  641 */     TreeMap<Long, Double> consolMTMMap = new TreeMap();
 /*      */     
 /*      */ 
-/*  642 */     for (String strategyID : this.strategySet)
+/*  644 */     for (String strategyID : this.strategySet)
 /*      */     {
 /*      */ 
-/*  645 */       TreeMap<Long, Double> strategyMTMMap = new TreeMap();
+/*  647 */       TreeMap<Long, Double> strategyMTMMap = new TreeMap();
 /*      */       
 /*      */ 
-/*  648 */       for (String scripListID : this.scripListSet)
+/*  650 */       for (String scripListID : this.scripListSet)
 /*      */       {
 /*      */ 
-/*  651 */         TreeMap<Long, Double> scripListMTMMap = new TreeMap();
+/*  653 */         TreeMap<Long, Double> scripListMTMMap = new TreeMap();
 /*      */         
 /*      */ 
-/*  654 */         for (String scripID : this.scripSet)
+/*  656 */         for (String scripID : this.scripSet)
 /*      */         {
 /*      */ 
-/*  657 */           if (checkIfResultExpected(strategyID, scripListID, scripID))
+/*  659 */           if (checkIfResultExpected(strategyID, scripListID, scripID))
 /*      */           {
 /*      */ 
-/*  660 */             TreeMap<Long, Double> scripMTMMap = getStrategyScripListScripMTM(strategyID, scripListID, scripID);
+/*  662 */             TreeMap<Long, Double> scripMTMMap = getStrategyScripListScripMTM(strategyID, scripListID, scripID);
 /*      */             
 /*      */ 
-/*  663 */             appendMTMmap(scripListMTMMap, scripMTMMap);
+/*  665 */             appendMTMmap(scripListMTMMap, scripMTMMap);
 /*      */           }
 /*      */         }
 /*      */         
 /*      */ 
-/*  668 */         appendMTMmap(strategyMTMMap, scripListMTMMap);
+/*  670 */         appendMTMmap(strategyMTMMap, scripListMTMMap);
 /*      */       }
 /*      */       
 /*      */ 
 /*      */ 
-/*  673 */       TreeMap<Long, Integer> dateScripCountMap = new TreeMap();
+/*  675 */       TreeMap<Long, Integer> dateScripCountMap = new TreeMap();
 /*      */       
-/*  675 */       if (this.aggregationMode.equals(AggregationMode.Active)) {
-/*  676 */         dateScripCountMap = createDateScripCountMap(strategyID);
+/*  677 */       if (this.aggregationMode.equals(AggregationMode.Active)) {
+/*  678 */         dateScripCountMap = createDateScripCountMap(strategyID);
 /*      */       }
 /*      */       
-/*  679 */       adjustMTMmap(strategyMTMMap, Integer.valueOf(this.scripListSet.size()), this.aggregationMode, dateScripCountMap);
+/*  681 */       adjustMTMmap(strategyMTMMap, Integer.valueOf(this.scripListSet.size()), this.aggregationMode, dateScripCountMap);
 /*      */       
 /*      */ 
-/*  682 */       appendMTMmap(consolMTMMap, strategyMTMMap);
+/*  684 */       appendMTMmap(consolMTMMap, strategyMTMMap);
 /*      */     }
 /*      */     
 /*      */ 
-/*  686 */     adjustMTMmap(consolMTMMap, Integer.valueOf(this.strategySet.size()), AggregationMode.Fixed, new TreeMap());
+/*  688 */     adjustMTMmap(consolMTMMap, Integer.valueOf(this.strategySet.size()), AggregationMode.Fixed, new TreeMap());
 /*      */     
-/*  688 */     return consolMTMMap;
+/*  690 */     return consolMTMMap;
 /*      */   }
 /*      */   
 /*      */   public TreeMap<Long, Double> getConsolMTM()
 /*      */     throws Exception
 /*      */   {
-/*  694 */     String mtmFolderPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/MTM Data";
+/*  696 */     String mtmFolderPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/MTM Data";
 /*      */     
-/*  696 */     File mtmFolderPathFile = new File(mtmFolderPath);
-/*  697 */     File[] mtmFolders = mtmFolderPathFile.listFiles();
-/*      */     
-/*      */ 
-/*  700 */     TreeMap<Long, Double> consolMTMMap = new TreeMap();
+/*  698 */     File mtmFolderPathFile = new File(mtmFolderPath);
+/*  699 */     File[] mtmFolders = mtmFolderPathFile.listFiles();
 /*      */     
 /*      */ 
-/*  703 */     TreeMap<Long, Integer> dateScripCountMap = new TreeMap();
+/*  702 */     TreeMap<Long, Double> consolMTMMap = new TreeMap();
+/*      */     
+/*      */ 
+/*  705 */     TreeMap<Long, Integer> dateScripCountMap = new TreeMap();
 /*      */     
 /*      */     File[] arrayOfFile1;
-/*  706 */     int j = (arrayOfFile1 = mtmFolders).length; for (int i = 0; i < j; i++) { File mtmFolder = arrayOfFile1[i];
+/*  708 */     int j = (arrayOfFile1 = mtmFolders).length; for (int i = 0; i < j; i++) { File mtmFolder = arrayOfFile1[i];
 /*      */       
 /*      */ 
-/*  709 */       String[] mtmFolderVal = mtmFolder.getName().split(" ");
+/*  711 */       String[] mtmFolderVal = mtmFolder.getName().split(" ");
 /*      */       
-/*  711 */       String strategyID = mtmFolderVal[0];
-/*  712 */       String scripListID = mtmFolderVal[1];
+/*  713 */       String strategyID = mtmFolderVal[0];
+/*  714 */       String scripListID = mtmFolderVal[1];
 /*      */       
 /*      */ 
-/*  715 */       if (mtmFolderVal.length > 2) {
-/*  716 */         scripListID = 
-/*  717 */           mtmFolderVal[1] + " " + mtmFolderVal[2] + " " + mtmFolderVal[3] + " " + mtmFolderVal[4] + " " + mtmFolderVal[5];
+/*  717 */       if (mtmFolderVal.length > 2) {
+/*  718 */         scripListID = 
+/*  719 */           mtmFolderVal[1] + " " + mtmFolderVal[2] + " " + mtmFolderVal[3] + " " + mtmFolderVal[4] + " " + mtmFolderVal[5];
 /*      */       }
 /*      */       
-/*  720 */       TreeMap<Long, Double> scripListMTMMap = new TreeMap();
+/*  722 */       TreeMap<Long, Double> scripListMTMMap = new TreeMap();
 /*      */       
 /*      */ 
-/*  723 */       String mtmPath = mtmFolderPath + "/" + mtmFolder.getName();
-/*  724 */       File mtmPathFile = new File(mtmPath);
-/*  725 */       File[] mtmFiles = mtmPathFile.listFiles();
+/*  725 */       String mtmPath = mtmFolderPath + "/" + mtmFolder.getName();
+/*  726 */       File mtmPathFile = new File(mtmPath);
+/*  727 */       File[] mtmFiles = mtmPathFile.listFiles();
 /*      */       
 /*      */       File[] arrayOfFile2;
-/*  728 */       int m = (arrayOfFile2 = mtmFiles).length; for (int k = 0; k < m; k++) { File mtmFile = arrayOfFile2[k];
+/*  730 */       int m = (arrayOfFile2 = mtmFiles).length; for (int k = 0; k < m; k++) { File mtmFile = arrayOfFile2[k];
 /*      */         
-/*  730 */         String mtmFileName = mtmFile.getName();
-/*  731 */         String scripID = mtmFileName.substring(0, mtmFileName.length() - 8);
+/*  732 */         String mtmFileName = mtmFile.getName();
+/*  733 */         String scripID = mtmFileName.substring(0, mtmFileName.length() - 8);
 /*      */         
-/*  733 */         TreeMap<Long, Double> scripMTMMap = getStrategyScripListScripMTM(strategyID, scripListID, scripID);
+/*  735 */         TreeMap<Long, Double> scripMTMMap = getStrategyScripListScripMTM(strategyID, scripListID, scripID);
 /*      */         
 /*      */ 
-/*  736 */         appendMTMmap(scripListMTMMap, scripMTMMap);
+/*  738 */         appendMTMmap(scripListMTMMap, scripMTMMap);
 /*      */       }
 /*      */       
 /*      */ 
-/*  740 */       appendMTMmap(consolMTMMap, scripListMTMMap);
+/*  742 */       appendMTMmap(consolMTMMap, scripListMTMMap);
 /*      */       
-/*  742 */       if (this.aggregationMode.equals(AggregationMode.Active)) {
-/*  743 */         dateScripCountMap = createDateScripCountMap(strategyID);
+/*  744 */       if (this.aggregationMode.equals(AggregationMode.Active)) {
+/*  745 */         dateScripCountMap = createDateScripCountMap(strategyID);
 /*      */       }
 /*      */     }
 /*      */     
-/*  747 */     adjustMTMmap(consolMTMMap, Integer.valueOf(mtmFolders.length), this.aggregationMode, dateScripCountMap);
+/*  749 */     adjustMTMmap(consolMTMMap, Integer.valueOf(mtmFolders.length), this.aggregationMode, dateScripCountMap);
 /*      */     
 /*      */ 
-/*  750 */     CSVWriter writer = null;
+/*  752 */     CSVWriter writer = null;
 /*      */     try {
-/*  752 */       writer = new CSVWriter(
-/*  753 */         this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results/Consol MTM.csv", false, ",");
+/*  754 */       writer = new CSVWriter(
+/*  755 */         this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/Results/Consol MTM.csv", false, ",");
 /*      */     }
 /*      */     catch (IOException e) {
-/*  756 */       e.printStackTrace();
+/*  758 */       e.printStackTrace();
 /*      */     }
-/*  758 */     for (Object entry : consolMTMMap.entrySet()) {
-/*  759 */       String[] outLine = { ((Long)((Map.Entry)entry).getKey()).toString(), ((Double)((Map.Entry)entry).getValue()).toString() };
+/*  760 */     for (Object entry : consolMTMMap.entrySet()) {
+/*  761 */       String[] outLine = { ((Long)((Map.Entry)entry).getKey()).toString(), ((Double)((Map.Entry)entry).getValue()).toString() };
 /*      */       try {
-/*  761 */         writer.writeLine(outLine);
+/*  763 */         writer.writeLine(outLine);
 /*      */       }
 /*      */       catch (IOException e) {
-/*  764 */         e.printStackTrace();
+/*  766 */         e.printStackTrace();
 /*      */       }
 /*      */     }
 /*      */     try {
-/*  768 */       writer.close();
+/*  770 */       writer.close();
 /*      */     }
 /*      */     catch (IOException e) {
-/*  771 */       e.printStackTrace();
+/*  773 */       e.printStackTrace();
 /*      */     }
-/*  773 */     return consolMTMMap;
+/*  775 */     return consolMTMMap;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public TreeMap<Long, Double> getStrategyScripListScripMTM(String strategyID, String scripListID, String scripID)
 /*      */   {
-/*  779 */     TreeMap<Long, Double> mtmMap = new TreeMap();
+/*  781 */     TreeMap<Long, Double> mtmMap = new TreeMap();
 /*      */     
-/*  781 */     String mtmPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/MTM Data/" + strategyID + " " + 
-/*  782 */       scripListID;
+/*  783 */     String mtmPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/MTM Data/" + strategyID + " " + 
+/*  784 */       scripListID;
 /*      */     
-/*  784 */     String mtmFilePath = mtmPath + "/" + scripID + " MTM.csv";
+/*  786 */     String mtmFilePath = mtmPath + "/" + scripID + " MTM.csv";
 /*      */     
-/*  786 */     CSVReader reader = null;
+/*  788 */     CSVReader reader = null;
 /*      */     try {
-/*  788 */       reader = new CSVReader(mtmFilePath, ',', 0);
+/*  790 */       reader = new CSVReader(mtmFilePath, ',', 0);
 /*      */       String[] inData;
-/*  790 */       while ((inData = reader.getLine()) != null) {
+/*  792 */       while ((inData = reader.getLine()) != null) {
 /*      */         String[] inData;
-/*  792 */         Long date = Long.valueOf(Long.parseLong(inData[0]));
+/*  794 */         Long date = Long.valueOf(Long.parseLong(inData[0]));
 /*      */         
 /*      */ 
-/*  795 */         if (date.longValue() >= this.startDate)
+/*  797 */         if (date.longValue() >= this.startDate)
 /*      */         {
 /*      */ 
 /*      */ 
-/*  799 */           if (date.longValue() > this.endDate) {
+/*  801 */           if (date.longValue() > this.endDate) {
 /*      */             break;
 /*      */           }
 /*      */           
-/*  803 */           Double mtm = Double.valueOf(Double.parseDouble(inData[1]));
-/*  804 */           mtmMap.put(date, mtm);
+/*  805 */           Double mtm = Double.valueOf(Double.parseDouble(inData[1]));
+/*  806 */           mtmMap.put(date, mtm);
 /*      */         }
 /*      */       }
-/*  807 */     } catch (IOException e1) { this.btGlobal.displayMessage("Could not find MTM File: " + strategyID + " " + scripListID + " " + scripID);
-/*  808 */       e1.printStackTrace();
-/*  809 */       return null;
+/*  809 */     } catch (IOException e1) { this.btGlobal.displayMessage("Could not find MTM File: " + strategyID + " " + scripListID + " " + scripID);
+/*  810 */       e1.printStackTrace();
+/*  811 */       return null;
 /*      */     }
 /*      */     
-/*  812 */     return mtmMap;
+/*  814 */     return mtmMap;
 /*      */   }
 /*      */   
 /*      */ 
@@ -863,83 +865,83 @@
 /*      */ 
 /*      */   public boolean checkIfResultExpected(String strategyID, String scripListID, String scripID)
 /*      */   {
-/*  822 */     TreeMap<String, TreeMap<String, TreeMap<String, String>>> scripListMap = (TreeMap)this.resultsFileMap.get(strategyID);
-/*  823 */     if (scripListMap == null) {
-/*  824 */       return false;
+/*  824 */     TreeMap<String, TreeMap<String, TreeMap<String, String>>> scripListMap = (TreeMap)this.resultsFileMap.get(strategyID);
+/*  825 */     if (scripListMap == null) {
+/*  826 */       return false;
 /*      */     }
 /*      */     
-/*  827 */     TreeMap<String, TreeMap<String, String>> assetClassMap = (TreeMap)scripListMap.get(scripListID);
-/*  828 */     if (assetClassMap == null) {
-/*  829 */       return false;
+/*  829 */     TreeMap<String, TreeMap<String, String>> assetClassMap = (TreeMap)scripListMap.get(scripListID);
+/*  830 */     if (assetClassMap == null) {
+/*  831 */       return false;
 /*      */     }
-/*  831 */     for (Map.Entry<String, TreeMap<String, String>> assetClassEntry : assetClassMap.entrySet()) {
-/*  832 */       TreeMap<String, String> scripMap = (TreeMap)assetClassEntry.getValue();
+/*  833 */     for (Map.Entry<String, TreeMap<String, String>> assetClassEntry : assetClassMap.entrySet()) {
+/*  834 */       TreeMap<String, String> scripMap = (TreeMap)assetClassEntry.getValue();
 /*      */       
-/*  834 */       if (scripMap != null)
+/*  836 */       if (scripMap != null)
 /*      */       {
-/*  836 */         if (scripMap.keySet().contains(scripID))
-/*  837 */           return true;
+/*  838 */         if (scripMap.keySet().contains(scripID))
+/*  839 */           return true;
 /*      */       }
 /*      */     }
-/*  840 */     return false;
+/*  842 */     return false;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */ 
 /*      */   public ArrayList<String[]> cleanTradebookForRunningTrades(ArrayList<String[]> tradeBook)
 /*      */   {
-/*  847 */     Double curPosition = Double.valueOf(0.0D);
-/*  848 */     Double prevPosition = Double.valueOf(0.0D);
-/*  849 */     int lastExitIndex = 0;
-/*  850 */     for (int i = 0; i < tradeBook.size(); i++) {
-/*  851 */       String[] trade = (String[])tradeBook.get(i);
-/*  852 */       String side = trade[3];
-/*  853 */       String type = trade[4];
+/*  849 */     Double curPosition = Double.valueOf(0.0D);
+/*  850 */     Double prevPosition = Double.valueOf(0.0D);
+/*  851 */     int lastExitIndex = 0;
+/*  852 */     for (int i = 0; i < tradeBook.size(); i++) {
+/*  853 */       String[] trade = (String[])tradeBook.get(i);
+/*  854 */       String side = trade[3];
+/*  855 */       String type = trade[4];
 /*      */       
-/*  855 */       if (!type.equals("ROLLOVER"))
+/*  857 */       if (!type.equals("ROLLOVER"))
 /*      */       {
 /*      */ 
-/*  858 */         int signal = 0;
-/*  859 */         if (side.equals("BUY")) {
-/*  860 */           signal = 1;
+/*  860 */         int signal = 0;
+/*  861 */         if (side.equals("BUY")) {
+/*  862 */           signal = 1;
 /*      */         } else {
-/*  862 */           signal = -1;
+/*  864 */           signal = -1;
 /*      */         }
-/*  864 */         prevPosition = curPosition;
-/*  865 */         curPosition = Double.valueOf(curPosition.doubleValue() + signal * Double.parseDouble(trade[7]));
+/*  866 */         prevPosition = curPosition;
+/*  867 */         curPosition = Double.valueOf(curPosition.doubleValue() + signal * Double.parseDouble(trade[7]));
 /*      */         
-/*  867 */         if (((MathLib.doubleCompare(curPosition, Double.valueOf(0.0D)).intValue() == 0 ? 1 : 0) & (MathLib.doubleCompare(prevPosition, Double.valueOf(0.0D)).intValue() != 0 ? 1 : 0)) != 0) {
-/*  868 */           lastExitIndex = i;
+/*  869 */         if (((MathLib.doubleCompare(curPosition, Double.valueOf(0.0D)).intValue() == 0 ? 1 : 0) & (MathLib.doubleCompare(prevPosition, Double.valueOf(0.0D)).intValue() != 0 ? 1 : 0)) != 0) {
+/*  870 */           lastExitIndex = i;
 /*      */         }
 /*      */       }
 /*      */     }
 /*      */     
 /*      */ 
-/*  874 */     while (tradeBook.size() > lastExitIndex + 1) {
-/*  875 */       tradeBook.remove(lastExitIndex + 1);
+/*  876 */     while (tradeBook.size() > lastExitIndex + 1) {
+/*  877 */       tradeBook.remove(lastExitIndex + 1);
 /*      */     }
 /*      */     
-/*  878 */     return tradeBook;
+/*  880 */     return tradeBook;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public void appendMTMmap(TreeMap<Long, Double> currentMap, TreeMap<Long, Double> newMap)
 /*      */   {
-/*  884 */     if (newMap.size() == 0) {
-/*  885 */       return;
+/*  886 */     if (newMap.size() == 0) {
+/*  887 */       return;
 /*      */     }
-/*  887 */     for (Map.Entry<Long, Double> mtmEntry : newMap.entrySet()) {
-/*  888 */       Long dateTime = (Long)mtmEntry.getKey();
-/*  889 */       Double mtm = (Double)mtmEntry.getValue();
-/*  890 */       Double curMTM = Double.valueOf(0.0D);
+/*  889 */     for (Map.Entry<Long, Double> mtmEntry : newMap.entrySet()) {
+/*  890 */       Long dateTime = (Long)mtmEntry.getKey();
+/*  891 */       Double mtm = (Double)mtmEntry.getValue();
+/*  892 */       Double curMTM = Double.valueOf(0.0D);
 /*      */       try {
-/*  892 */         curMTM = (Double)currentMap.get(dateTime);
-/*  893 */         if (curMTM == null)
-/*  894 */           curMTM = Double.valueOf(0.0D);
-/*  895 */         currentMap.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
+/*  894 */         curMTM = (Double)currentMap.get(dateTime);
+/*  895 */         if (curMTM == null)
+/*  896 */           curMTM = Double.valueOf(0.0D);
+/*  897 */         currentMap.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
 /*      */       } catch (Exception e) {
-/*  897 */         curMTM = Double.valueOf(0.0D);
-/*  898 */         currentMap.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
+/*  899 */         curMTM = Double.valueOf(0.0D);
+/*  900 */         currentMap.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
 /*      */       }
 /*      */     }
 /*      */   }
@@ -949,24 +951,24 @@
 /*      */   public void adjustMTMmap(TreeMap<Long, Double> currentMap, Integer fixedCount, AggregationMode aggregationMode, TreeMap<Long, Integer> dateScripCountMap)
 /*      */     throws Exception
 /*      */   {
-/*  908 */     if (aggregationMode.equals(AggregationMode.Fixed)) {
-/*  909 */       for (Map.Entry<Long, Double> mtmEntry : new TreeMap(currentMap).entrySet()) {
-/*  910 */         Long dateTime = (Long)mtmEntry.getKey();
-/*  911 */         Double mtm = Double.valueOf(((Double)mtmEntry.getValue()).doubleValue() / fixedCount.doubleValue());
-/*  912 */         currentMap.put(dateTime, mtm);
+/*  910 */     if (aggregationMode.equals(AggregationMode.Fixed)) {
+/*  911 */       for (Map.Entry<Long, Double> mtmEntry : new TreeMap(currentMap).entrySet()) {
+/*  912 */         Long dateTime = (Long)mtmEntry.getKey();
+/*  913 */         Double mtm = Double.valueOf(((Double)mtmEntry.getValue()).doubleValue() / fixedCount.doubleValue());
+/*  914 */         currentMap.put(dateTime, mtm);
 /*      */       }
 /*      */       
 /*      */ 
 /*      */     }
-/*  917 */     else if (aggregationMode.equals(AggregationMode.Active))
+/*  919 */     else if (aggregationMode.equals(AggregationMode.Active))
 /*      */     {
-/*  919 */       ??? = new TreeMap(currentMap).entrySet().iterator();
-/*  918 */       while (???.hasNext()) {
-/*  919 */         Map.Entry<Long, Double> mtmEntry = (Map.Entry)???.next();
-/*  920 */         Long dateTime = (Long)mtmEntry.getKey();
-/*  921 */         Double activeCount = getActiveCount(dateTime, dateScripCountMap);
-/*  922 */         Double mtm = Double.valueOf(((Double)mtmEntry.getValue()).doubleValue() / activeCount.doubleValue());
-/*  923 */         currentMap.put(dateTime, mtm);
+/*  921 */       ??? = new TreeMap(currentMap).entrySet().iterator();
+/*  920 */       while (???.hasNext()) {
+/*  921 */         Map.Entry<Long, Double> mtmEntry = (Map.Entry)???.next();
+/*  922 */         Long dateTime = (Long)mtmEntry.getKey();
+/*  923 */         Double activeCount = getActiveCount(dateTime, dateScripCountMap);
+/*  924 */         Double mtm = Double.valueOf(((Double)mtmEntry.getValue()).doubleValue() / activeCount.doubleValue());
+/*  925 */         currentMap.put(dateTime, mtm);
 /*      */       }
 /*      */     }
 /*      */   }
@@ -975,137 +977,137 @@
 /*      */ 
 /*      */   public Double getActiveCount(Long dateTime, TreeMap<Long, Integer> dateScripCountMap)
 /*      */   {
-/*  932 */     double activeCount = 0.0D;
-/*  933 */     for (Map.Entry<Long, Integer> entry : dateScripCountMap.entrySet()) {
-/*  934 */       Long curDate = (Long)entry.getKey();
-/*  935 */       if (curDate.compareTo(dateTime) > 0) break;
-/*  936 */       activeCount += ((Integer)entry.getValue()).intValue();
+/*  934 */     double activeCount = 0.0D;
+/*  935 */     for (Map.Entry<Long, Integer> entry : dateScripCountMap.entrySet()) {
+/*  936 */       Long curDate = (Long)entry.getKey();
+/*  937 */       if (curDate.compareTo(dateTime) > 0) break;
+/*  938 */       activeCount += ((Integer)entry.getValue()).intValue();
 /*      */     }
 /*      */     
 /*      */ 
-/*  940 */     return Double.valueOf(activeCount);
+/*  942 */     return Double.valueOf(activeCount);
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public TreeMap<Long, Double> combineMTMmaps(HashMap<String, TreeMap<Long, Double>> mtmMaps)
 /*      */   {
-/*  946 */     Integer count = Integer.valueOf(mtmMaps.size());
-/*  947 */     TreeMap<Long, Double> consolMTM = new TreeMap();
-/*  948 */     for (Map.Entry<String, TreeMap<Long, Double>> entry : mtmMaps.entrySet()) {
-/*  949 */       TreeMap<Long, Double> mtmMap = (TreeMap)entry.getValue();
-/*  950 */       if (mtmMap.size() != 0)
+/*  948 */     Integer count = Integer.valueOf(mtmMaps.size());
+/*  949 */     TreeMap<Long, Double> consolMTM = new TreeMap();
+/*  950 */     for (Map.Entry<String, TreeMap<Long, Double>> entry : mtmMaps.entrySet()) {
+/*  951 */       TreeMap<Long, Double> mtmMap = (TreeMap)entry.getValue();
+/*  952 */       if (mtmMap.size() != 0)
 /*      */       {
-/*  952 */         for (Map.Entry<Long, Double> mtmEntry : mtmMap.entrySet()) {
-/*  953 */           Long dateTime = (Long)mtmEntry.getKey();
-/*  954 */           Double mtm = (Double)mtmEntry.getValue();
-/*  955 */           Double curMTM = Double.valueOf(0.0D);
+/*  954 */         for (Map.Entry<Long, Double> mtmEntry : mtmMap.entrySet()) {
+/*  955 */           Long dateTime = (Long)mtmEntry.getKey();
+/*  956 */           Double mtm = (Double)mtmEntry.getValue();
+/*  957 */           Double curMTM = Double.valueOf(0.0D);
 /*      */           try {
-/*  957 */             curMTM = (Double)consolMTM.get(dateTime);
-/*  958 */             if (curMTM == null)
-/*  959 */               curMTM = Double.valueOf(0.0D);
-/*  960 */             consolMTM.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
+/*  959 */             curMTM = (Double)consolMTM.get(dateTime);
+/*  960 */             if (curMTM == null)
+/*  961 */               curMTM = Double.valueOf(0.0D);
+/*  962 */             consolMTM.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
 /*      */           } catch (Exception e) {
-/*  962 */             curMTM = Double.valueOf(0.0D);
-/*  963 */             consolMTM.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
+/*  964 */             curMTM = Double.valueOf(0.0D);
+/*  965 */             consolMTM.put(dateTime, Double.valueOf(curMTM.doubleValue() + mtm.doubleValue()));
 /*      */           }
 /*      */         } }
 /*      */     }
-/*  967 */     for (Map.Entry<Long, Double> mtmEntry : new TreeMap(consolMTM).entrySet()) {
-/*  968 */       Long dateTime = (Long)mtmEntry.getKey();
-/*  969 */       Double mtm = Double.valueOf(((Double)mtmEntry.getValue()).doubleValue() / count.doubleValue());
-/*  970 */       consolMTM.put(dateTime, mtm);
+/*  969 */     for (Map.Entry<Long, Double> mtmEntry : new TreeMap(consolMTM).entrySet()) {
+/*  970 */       Long dateTime = (Long)mtmEntry.getKey();
+/*  971 */       Double mtm = Double.valueOf(((Double)mtmEntry.getValue()).doubleValue() / count.doubleValue());
+/*  972 */       consolMTM.put(dateTime, mtm);
 /*      */     }
-/*  972 */     return consolMTM;
+/*  974 */     return consolMTM;
 /*      */   }
 /*      */   
 /*      */   public TreeMap<Long, Integer> createDateScripCountMap(String strategyID) {
-/*  976 */     TreeMap<Long, Integer> dateScripCountMap = new TreeMap();
-/*  977 */     CSVReader reader = null;
+/*  978 */     TreeMap<Long, Integer> dateScripCountMap = new TreeMap();
+/*  979 */     CSVReader reader = null;
 /*      */     try {
-/*  979 */       reader = new CSVReader(this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + 
-/*  980 */         "/Parameters/" + strategyID + " ScripListDateMap.csv", ',', 0);
-/*  981 */       String[] line = reader.getLine();
-/*  982 */       while ((line = reader.getLine()) != null) {
-/*  983 */         Long date = Long.valueOf(Long.parseLong(line[1]));
-/*  984 */         if (dateScripCountMap.containsKey(date)) {
-/*  985 */           Integer currentCount = (Integer)dateScripCountMap.get(date);
-/*  986 */           dateScripCountMap.put(date, Integer.valueOf(currentCount.intValue() + 1));
+/*  981 */       reader = new CSVReader(this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + 
+/*  982 */         "/Parameters/" + strategyID + " ScripListDateMap.csv", ',', 0);
+/*  983 */       String[] line = reader.getLine();
+/*  984 */       while ((line = reader.getLine()) != null) {
+/*  985 */         Long date = Long.valueOf(Long.parseLong(line[1]));
+/*  986 */         if (dateScripCountMap.containsKey(date)) {
+/*  987 */           Integer currentCount = (Integer)dateScripCountMap.get(date);
+/*  988 */           dateScripCountMap.put(date, Integer.valueOf(currentCount.intValue() + 1));
 /*      */         } else {
-/*  988 */           dateScripCountMap.put(date, Integer.valueOf(1));
+/*  990 */           dateScripCountMap.put(date, Integer.valueOf(1));
 /*      */         }
 /*      */       }
 /*      */     } catch (IOException e) {
-/*  992 */       e.printStackTrace();
+/*  994 */       e.printStackTrace();
 /*      */     }
 /*      */     
-/*  995 */     return dateScripCountMap;
+/*  997 */     return dateScripCountMap;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   String getMTMFilePath(String strategyID, String scripListID, String assetClassID, String scripID)
 /*      */   {
-/* 1001 */     return (String)((TreeMap)((TreeMap)((TreeMap)this.resultsFileMap.get(strategyID)).get(scripListID)).get(assetClassID)).get(scripID);
+/* 1003 */     return (String)((TreeMap)((TreeMap)((TreeMap)this.resultsFileMap.get(strategyID)).get(scripListID)).get(assetClassID)).get(scripID);
 /*      */   }
 /*      */   
 /*      */   public void generateResultsFileMap()
 /*      */     throws Exception
 /*      */   {
-/* 1007 */     this.resultsFileMap = new TreeMap();
+/* 1009 */     this.resultsFileMap = new TreeMap();
 /*      */     
-/* 1009 */     String mtmFolderPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/MTM Data";
+/* 1011 */     String mtmFolderPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.timeStamp + "/MTM Data";
 /*      */     
-/* 1011 */     File mtmFolderPathFile = new File(mtmFolderPath);
-/* 1012 */     File[] mtmFolders = mtmFolderPathFile.listFiles();
+/* 1013 */     File mtmFolderPathFile = new File(mtmFolderPath);
+/* 1014 */     File[] mtmFolders = mtmFolderPathFile.listFiles();
 /*      */     
 /*      */     File[] arrayOfFile1;
-/* 1015 */     int j = (arrayOfFile1 = mtmFolders).length; for (int i = 0; i < j; i++) { File mtmFolder = arrayOfFile1[i];
+/* 1017 */     int j = (arrayOfFile1 = mtmFolders).length; for (int i = 0; i < j; i++) { File mtmFolder = arrayOfFile1[i];
 /*      */       
 /*      */ 
-/* 1018 */       String[] mtmFolderVal = mtmFolder.getName().split(" ");
+/* 1020 */       String[] mtmFolderVal = mtmFolder.getName().split(" ");
 /*      */       
-/* 1020 */       String strategyID = mtmFolderVal[0];
+/* 1022 */       String strategyID = mtmFolderVal[0];
 /*      */       
 /*      */ 
-/* 1023 */       TreeMap<String, TreeMap<String, TreeMap<String, String>>> scripListFileMap = (TreeMap)this.resultsFileMap.get(strategyID);
-/* 1024 */       if (scripListFileMap == null) {
-/* 1025 */         scripListFileMap = new TreeMap();
+/* 1025 */       TreeMap<String, TreeMap<String, TreeMap<String, String>>> scripListFileMap = (TreeMap)this.resultsFileMap.get(strategyID);
+/* 1026 */       if (scripListFileMap == null) {
+/* 1027 */         scripListFileMap = new TreeMap();
 /*      */       }
-/* 1027 */       String scripListID = mtmFolderVal[1];
-/* 1028 */       if (mtmFolderVal.length > 2) {
-/* 1029 */         scripListID = 
-/* 1030 */           mtmFolderVal[1] + " " + mtmFolderVal[2] + " " + mtmFolderVal[3] + " " + mtmFolderVal[4] + " " + mtmFolderVal[5];
-/*      */       }
-/*      */       
-/* 1033 */       String[] splits = mtmFolderVal[1].split("\\$");
-/* 1034 */       String assetClassID = splits[1];
-/* 1035 */       TreeMap<String, TreeMap<String, String>> assetClassMap = (TreeMap)scripListFileMap.get(scripListID);
-/* 1036 */       if (assetClassMap == null) {
-/* 1037 */         assetClassMap = new TreeMap();
+/* 1029 */       String scripListID = mtmFolderVal[1];
+/* 1030 */       if (mtmFolderVal.length > 2) {
+/* 1031 */         scripListID = 
+/* 1032 */           mtmFolderVal[1] + " " + mtmFolderVal[2] + " " + mtmFolderVal[3] + " " + mtmFolderVal[4] + " " + mtmFolderVal[5];
 /*      */       }
 /*      */       
-/* 1040 */       TreeMap<String, String> scripFileMap = (TreeMap)assetClassMap.get(assetClassID);
-/* 1041 */       if (scripFileMap == null) {
-/* 1042 */         scripFileMap = new TreeMap();
+/* 1035 */       String[] splits = mtmFolderVal[1].split("\\$");
+/* 1036 */       String assetClassID = splits[1];
+/* 1037 */       TreeMap<String, TreeMap<String, String>> assetClassMap = (TreeMap)scripListFileMap.get(scripListID);
+/* 1038 */       if (assetClassMap == null) {
+/* 1039 */         assetClassMap = new TreeMap();
 /*      */       }
 /*      */       
-/* 1045 */       String mtmPath = mtmFolderPath + "/" + mtmFolder.getName();
-/* 1046 */       File mtmPathFile = new File(mtmPath);
-/* 1047 */       File[] mtmFiles = mtmPathFile.listFiles();
+/* 1042 */       TreeMap<String, String> scripFileMap = (TreeMap)assetClassMap.get(assetClassID);
+/* 1043 */       if (scripFileMap == null) {
+/* 1044 */         scripFileMap = new TreeMap();
+/*      */       }
+/*      */       
+/* 1047 */       String mtmPath = mtmFolderPath + "/" + mtmFolder.getName();
+/* 1048 */       File mtmPathFile = new File(mtmPath);
+/* 1049 */       File[] mtmFiles = mtmPathFile.listFiles();
 /*      */       
 /*      */       File[] arrayOfFile2;
-/* 1050 */       int m = (arrayOfFile2 = mtmFiles).length; for (int k = 0; k < m; k++) { File mtmFile = arrayOfFile2[k];
-/* 1051 */         String mtmFileName = mtmFile.getName();
-/* 1052 */         String scripID = mtmFileName.substring(0, mtmFileName.length() - 8);
+/* 1052 */       int m = (arrayOfFile2 = mtmFiles).length; for (int k = 0; k < m; k++) { File mtmFile = arrayOfFile2[k];
+/* 1053 */         String mtmFileName = mtmFile.getName();
+/* 1054 */         String scripID = mtmFileName.substring(0, mtmFileName.length() - 8);
 /*      */         
 /*      */ 
-/* 1055 */         String mtmFilePath = mtmFile.getAbsolutePath();
-/* 1056 */         scripFileMap.put(scripID, mtmFilePath);
+/* 1057 */         String mtmFilePath = mtmFile.getAbsolutePath();
+/* 1058 */         scripFileMap.put(scripID, mtmFilePath);
 /*      */       }
 /*      */       
 /*      */ 
-/* 1060 */       assetClassMap.put(assetClassID, scripFileMap);
-/* 1061 */       scripListFileMap.put(scripListID, assetClassMap);
-/* 1062 */       this.resultsFileMap.put(strategyID, scripListFileMap);
+/* 1062 */       assetClassMap.put(assetClassID, scripFileMap);
+/* 1063 */       scripListFileMap.put(scripListID, assetClassMap);
+/* 1064 */       this.resultsFileMap.put(strategyID, scripListFileMap);
 /*      */     }
 /*      */   }
 /*      */ }

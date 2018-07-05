@@ -31,7 +31,7 @@
 /*     */ public class BacktesterGUI
 /*     */   extends JFrame
 /*     */ {
-/*  34 */   private String version = "8.16";
+/*  34 */   private String version = "8.16.1";
 /*     */   
 /*     */   BacktesterGlobal btGlobal;
 /*     */   
