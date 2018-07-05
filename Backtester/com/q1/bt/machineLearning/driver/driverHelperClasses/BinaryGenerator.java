@@ -235,7 +235,7 @@
 /*     */             Object tempTradeMap;
 /* 236 */             if (this.bias) {
 /*     */               Object tempTradeMap;
-/* 238 */               if ((((Boolean)result.get(assetName)).booleanValue()) && (btTradeSide.equals(tradeSide))) {
+/* 238 */               if ((((Boolean)result.get(assetName)).booleanValue()) && ((btTradeSide.equals(tradeSide)) || (btTradeSide.equals(Integer.valueOf(0))))) {
 /* 239 */                 tempTradeMap = this.tsTradedSelectedScripsMap;
 /*     */               } else {
 /* 241 */                 tempTradeMap = this.tsTradedNotSelectedScripsMap;

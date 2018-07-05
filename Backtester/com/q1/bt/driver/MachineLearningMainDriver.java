@@ -30,12 +30,14 @@
 /*      */ import java.util.Map.Entry;
 /*      */ import java.util.TreeMap;
 /*      */ import java.util.TreeSet;
+/*      */ import javax.swing.JOptionPane;
 /*      */ import org.apache.commons.io.FileUtils;
 /*      */ import org.rosuda.JRI.Rengine;
 /*      */ 
 /*      */ public class MachineLearningMainDriver implements Runnable
 /*      */ {
-/*   38 */   public Long DAILY_START_DATE = Long.valueOf(19800101L);
+/*      */   private static String destPath;
+/*   40 */   public Long DAILY_START_DATE = Long.valueOf(19800101L);
 /*      */   
 /*      */   ArrayList<Long> dateList;
 /*      */   
@@ -61,200 +63,201 @@
 /*      */   public MachineLearningMainDriver(BacktesterGlobal btGlobal, MachineLearning machineLearning)
 /*      */     throws IOException
 /*      */   {
-/*   64 */     this.btGlobal = btGlobal;
-/*   65 */     this.backtest = machineLearning.getBacktest();
-/*   66 */     this.dateList = btGlobal.getConsolDateList(this.backtest.timeStamp);
+/*   66 */     this.btGlobal = btGlobal;
+/*   67 */     this.backtest = machineLearning.getBacktest();
+/*   68 */     this.dateList = btGlobal.getConsolDateList(this.backtest.timeStamp);
 /*      */     
 /*      */ 
-/*   69 */     this.machineLearning = machineLearning;
-/*   70 */     this.mlParameter = machineLearning.getMlParameter();
+/*   71 */     this.machineLearning = machineLearning;
+/*   72 */     this.mlParameter = machineLearning.getMlParameter();
 /*      */     
-/*   72 */     this.postProcess = machineLearning.getBacktest().backtestParameter.isGenerateOutputCheck();
+/*   74 */     this.postProcess = machineLearning.getBacktest().backtestParameter.isGenerateOutputCheck();
 /*      */   }
 /*      */   
 /*      */   public void run()
 /*      */   {
 /*      */     try
 /*      */     {
-/*   79 */       execute();
+/*   81 */       execute();
 /*      */     } catch (Exception e) {
-/*   81 */       e.printStackTrace();
-/*   82 */       return;
+/*   83 */       e.printStackTrace();
+/*   84 */       return;
 /*      */     }
 /*      */     
-/*   85 */     if (this.btGlobal.isGui)
+/*   87 */     if (this.btGlobal.isGui)
 /*      */     {
-/*   87 */       BacktesterProcess[] choices = { BacktesterProcess.Backtest, BacktesterProcess.Results };
-/*   88 */       BacktesterProcess input = (BacktesterProcess)javax.swing.JOptionPane.showInputDialog(null, 
-/*   89 */         "Please choose the next Process", "Process Type", 3, null, 
-/*   90 */         choices, 
-/*   91 */         choices[0]);
+/*   89 */       BacktesterProcess[] choices = { BacktesterProcess.Backtest, BacktesterProcess.Results };
+/*   90 */       BacktesterProcess input = (BacktesterProcess)JOptionPane.showInputDialog(null, 
+/*   91 */         "Please choose the next Process", "Process Type", 3, null, 
+/*   92 */         choices, 
+/*   93 */         choices[0]);
 /*      */       
-/*   93 */       this.btGlobal.processFlow.add(input);
+/*   95 */       this.btGlobal.processFlow.add(input);
 /*      */       
 /*      */ 
-/*   96 */       if (input.equals(BacktesterProcess.Backtest))
+/*   98 */       if (input.equals(BacktesterProcess.Backtest))
 /*      */       {
 /*      */ 
-/*   99 */         this.btGlobal.displayMessage("Running Backtest on Updated Orderbook");
-/*  100 */         this.btGlobal.processFlow.update();
-/*  101 */         this.btGlobal.processFlow.add(BacktesterProcess.Results);
+/*  101 */         this.btGlobal.displayMessage("Running Backtest on Updated Orderbook");
+/*  102 */         this.btGlobal.processFlow.update();
+/*  103 */         this.btGlobal.processFlow.add(BacktesterProcess.Results);
 /*      */         try
 /*      */         {
-/*  104 */           Backtest mlBacktest = new Backtest(this.backtest.backtestParameter, 
-/*  105 */             this.mlPreProcessor.getDestPath() + "/ML Order Data");
-/*  106 */           mlBacktest.fileBacktest = true;
-/*  107 */           mlBacktest.timeStamp = this.machineLearning.getTimeStamp();
-/*  108 */           BacktestMainDriver backtestDriver = new BacktestMainDriver(this.btGlobal, mlBacktest);
-/*  109 */           Thread t = new Thread(backtestDriver);
-/*  110 */           t.start();
+/*  106 */           if (this.mlPreProcessor != null) {
+/*  107 */             destPath = this.mlPreProcessor.getDestPath();
+/*      */           }
+/*  109 */           Backtest mlBacktest = new Backtest(this.backtest.backtestParameter, destPath + "/ML Order Data");
+/*  110 */           mlBacktest.fileBacktest = true;
+/*  111 */           mlBacktest.timeStamp = this.machineLearning.getTimeStamp();
+/*  112 */           BacktestMainDriver backtestDriver = new BacktestMainDriver(this.btGlobal, mlBacktest);
+/*  113 */           Thread t = new Thread(backtestDriver);
+/*  114 */           t.start();
 /*      */         }
 /*      */         catch (Exception e) {
-/*  113 */           e.printStackTrace();
+/*  117 */           e.printStackTrace();
 /*      */         }
 /*      */         
 /*      */ 
 /*      */       }
-/*  118 */       else if (input.equals(BacktesterProcess.Results)) {
-/*  119 */         this.btGlobal.processFlow.update();
-/*  120 */         this.btGlobal.initializeProcess(this.machineLearning);
+/*  122 */       else if (input.equals(BacktesterProcess.Results)) {
+/*  123 */         this.btGlobal.processFlow.update();
+/*  124 */         this.btGlobal.initializeProcess(this.machineLearning);
 /*      */       }
 /*      */     }
 /*      */   }
 /*      */   
 /*      */   public void execute() throws Exception
 /*      */   {
-/*  127 */     String backtestPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.backtest.timeStamp;
-/*  128 */     Integer newTimeStamp = Integer.valueOf(Integer.parseInt(this.backtest.timeStamp) + 1);
-/*  129 */     this.backtest.timeStamp = newTimeStamp.toString();
-/*  130 */     String newBacktestPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.backtest.timeStamp;
-/*  131 */     File currentFile = new File(backtestPath);
-/*  132 */     File newFile = new File(newBacktestPath);
-/*  133 */     FileUtils.copyDirectory(currentFile, newFile);
-/*  134 */     FileUtils.deleteDirectory(currentFile);
+/*  131 */     String backtestPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.backtest.timeStamp;
+/*  132 */     Integer newTimeStamp = Integer.valueOf(Integer.parseInt(this.backtest.timeStamp) + 1);
+/*  133 */     this.backtest.timeStamp = newTimeStamp.toString();
+/*  134 */     String newBacktestPath = this.btGlobal.loginParameter.getOutputPath() + "/" + this.backtest.timeStamp;
+/*  135 */     File currentFile = new File(backtestPath);
+/*  136 */     File newFile = new File(newBacktestPath);
+/*  137 */     FileUtils.copyDirectory(currentFile, newFile);
+/*  138 */     FileUtils.deleteDirectory(currentFile);
 /*      */     
 /*      */ 
-/*  137 */     this.machineLearning.setTimeStamp("ML" + this.backtest.timeStamp);
+/*  141 */     this.machineLearning.setTimeStamp("ML" + this.backtest.timeStamp);
 /*      */     
 /*      */ 
-/*  140 */     HashMap<String, String> mlOutputMap = new HashMap();
+/*  144 */     HashMap<String, String> mlOutputMap = new HashMap();
 /*      */     try {
-/*  142 */       mlOutputMap = createMLOutputMap(this.btGlobal, this.machineLearning);
+/*  146 */       mlOutputMap = createMLOutputMap(this.btGlobal, this.machineLearning);
 /*      */     } catch (IOException e2) {
-/*  144 */       e2.printStackTrace();
-/*  145 */       return;
+/*  148 */       e2.printStackTrace();
+/*  149 */       return;
 /*      */     }
 /*      */     
 /*      */ 
 /*      */ 
-/*  150 */     boolean mlCheck = false;boolean mlOutputCheck = false;boolean mlInputCheck = false;
-/*  151 */     mlCheck = checkMLOutput(this.btGlobal, this.machineLearning, mlOutputMap);
-/*  152 */     if (!mlCheck)
+/*  154 */     boolean mlCheck = false;boolean mlOutputCheck = false;boolean mlInputCheck = false;
+/*  155 */     mlCheck = checkMLOutput(this.btGlobal, this.machineLearning, mlOutputMap);
+/*  156 */     if (!mlCheck)
 /*      */     {
-/*  154 */       mlOutputCheck = checkMLOOutput(this.btGlobal, this.machineLearning, mlOutputMap);
-/*  155 */       if (!mlOutputCheck)
+/*  158 */       mlOutputCheck = checkMLOOutput(this.btGlobal, this.machineLearning, mlOutputMap);
+/*  159 */       if (!mlOutputCheck)
 /*      */       {
-/*  157 */         mlInputCheck = checkMLIOutput(this.btGlobal, this.machineLearning, mlOutputMap);
+/*  161 */         mlInputCheck = checkMLIOutput(this.btGlobal, this.machineLearning, mlOutputMap);
 /*      */       }
 /*      */     }
 /*      */     
-/*  161 */     if (!mlCheck)
+/*  165 */     if (!mlCheck)
 /*      */     {
 /*      */ 
-/*  164 */       preProcess();
+/*  168 */       preProcess();
 /*      */       
-/*  166 */       if (!mlOutputCheck)
+/*  170 */       if (!mlOutputCheck)
 /*      */       {
-/*  168 */         if (!mlInputCheck)
+/*  172 */         if (!mlInputCheck)
 /*      */         {
-/*  170 */           createInputFile();
+/*  174 */           createInputFile();
 /*      */         }
 /*      */         
 /*      */ 
-/*  174 */         generateMLOutput();
+/*  178 */         generateMLOutput();
 /*      */       }
 /*      */       
 /*      */ 
 /*      */ 
-/*  179 */       readOutput();
+/*  183 */       readOutput();
 /*      */       
 /*      */ 
-/*  182 */       endProcess();
+/*  186 */       endProcess();
 /*      */     }
 /*      */   }
 /*      */   
 /*      */   public void preProcess() throws Exception
 /*      */   {
-/*  188 */     this.mlPreProcessor = new MLPreProcessor(this.btGlobal, this.backtest, this.machineLearning);
-/*  189 */     this.mlPreProcessor.mlPreProcess();
+/*  192 */     this.mlPreProcessor = new MLPreProcessor(this.btGlobal, this.backtest, this.machineLearning);
+/*  193 */     this.mlPreProcessor.mlPreProcess();
 /*      */   }
 /*      */   
 /*      */   public void createInputFile() throws Exception
 /*      */   {
-/*  194 */     ArrayList<String> scripUniverse = this.mlPreProcessor.getScripUniverse();
-/*  195 */     String dataPath = this.btGlobal.loginParameter.getDataPath();
+/*  198 */     ArrayList<String> scripUniverse = this.mlPreProcessor.getScripUniverse();
+/*  199 */     String dataPath = this.btGlobal.loginParameter.getDataPath();
 /*      */     
-/*  197 */     HashMap<String, DailyDataReader> dailyReaderCollection = initDailyreader(scripUniverse, dataPath, this.DAILY_START_DATE);
-/*  198 */     this.mlInputFileGenerator = new MLInputFileGenerator(this.btGlobal, this.backtest, this.mlParameter, dailyReaderCollection, this.mlParameter.getBias().booleanValue());
+/*  201 */     HashMap<String, DailyDataReader> dailyReaderCollection = initDailyreader(scripUniverse, dataPath, this.DAILY_START_DATE);
+/*  202 */     this.mlInputFileGenerator = new MLInputFileGenerator(this.btGlobal, this.backtest, this.mlParameter, dailyReaderCollection, this.mlParameter.getBias().booleanValue());
 /*      */     
-/*  200 */     boolean nextLayer = false;
-/*  201 */     TradeAndMTMDataProcessor stratTradePnL = this.mlPreProcessor.getStratTradePnL();
-/*  202 */     HashMap<String, ArrayList<Asset>> modelSegmentWiseAssetUniverseMap = this.mlPreProcessor.getModelSegmentWiseAssetUniverseMap();
-/*  203 */     String sourcePath = this.mlPreProcessor.getSourcePath();
-/*  204 */     String destPath = this.mlPreProcessor.getDestPath();
-/*  205 */     HashMap<String, TreeMap<Long, Long>> tradeStratEndMap = this.mlPreProcessor.getTradeStartEndMaps();
-/*  206 */     HashMap<String, TreeMap<Long, Integer>> tradeStartDateTradeSideMap = this.mlPreProcessor.getTradeStartDateTradeSideMaps();
+/*  204 */     boolean nextLayer = false;
+/*  205 */     TradeAndMTMDataProcessor stratTradePnL = this.mlPreProcessor.getStratTradePnL();
+/*  206 */     HashMap<String, ArrayList<Asset>> modelSegmentWiseAssetUniverseMap = this.mlPreProcessor.getModelSegmentWiseAssetUniverseMap();
+/*  207 */     String sourcePath = this.mlPreProcessor.getSourcePath();
+/*  208 */     String destPath = this.mlPreProcessor.getDestPath();
+/*  209 */     HashMap<String, TreeMap<Long, Long>> tradeStratEndMap = this.mlPreProcessor.getTradeStartEndMaps();
+/*  210 */     HashMap<String, TreeMap<Long, Integer>> tradeStartDateTradeSideMap = this.mlPreProcessor.getTradeStartDateTradeSideMaps();
 /*      */     
-/*  208 */     this.mlInputFileGenerator.createInputFile(nextLayer, sourcePath, destPath, dataPath, modelSegmentWiseAssetUniverseMap, 
-/*  209 */       scripUniverse, stratTradePnL, this.dateList, tradeStratEndMap, tradeStartDateTradeSideMap, this.DAILY_START_DATE);
+/*  212 */     this.mlInputFileGenerator.createInputFile(nextLayer, sourcePath, destPath, dataPath, modelSegmentWiseAssetUniverseMap, 
+/*  213 */       scripUniverse, stratTradePnL, this.dateList, tradeStratEndMap, tradeStartDateTradeSideMap, this.DAILY_START_DATE);
 /*      */   }
 /*      */   
-/*      */   public void readOutput() throws Exception
-/*      */   {
-/*  214 */     String sourcePath = this.mlPreProcessor.getSourcePath();
-/*  215 */     String destPath = this.mlPreProcessor.getDestPath();
-/*  216 */     String algoLastModifiedTimeStamp = this.mlPreProcessor.getAlgoLastModifiedTimeStamp();
-/*  217 */     this.modelSegmentWiseAssetUniverseMap = this.mlPreProcessor.getModelSegmentWiseAssetUniverseMap();
-/*  218 */     this.postModelSelectionSegmentWiseAssetUniverseMap = this.mlPreProcessor.getPostModelSelectionSegmentWiseAssetUniverseMap();
-/*  219 */     ArrayList<String> scripUniverse = this.mlPreProcessor.getScripUniverse();
+/*      */   public void readOutput() throws Exception {
+/*  217 */     String sourcePath = this.mlPreProcessor.getSourcePath();
+/*  218 */     String destPath = this.mlPreProcessor.getDestPath();
+/*  219 */     String algoLastModifiedTimeStamp = this.mlPreProcessor.getAlgoLastModifiedTimeStamp();
+/*  220 */     this.modelSegmentWiseAssetUniverseMap = this.mlPreProcessor.getModelSegmentWiseAssetUniverseMap();
+/*  221 */     this.postModelSelectionSegmentWiseAssetUniverseMap = this.mlPreProcessor.getPostModelSelectionSegmentWiseAssetUniverseMap();
+/*  222 */     ArrayList<String> scripUniverse = this.mlPreProcessor.getScripUniverse();
 /*      */     
 /*      */     HashMap<String, DailyDataReader> dailyReaderCollection;
 /*      */     TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals;
 /*      */     HashMap<String, DailyDataReader> dailyReaderCollection;
-/*  224 */     if (this.mlInputFileGenerator == null)
+/*  227 */     if (this.mlInputFileGenerator == null)
 /*      */     {
-/*  226 */       String dataPath = this.btGlobal.loginParameter.getDataPath();
-/*  227 */       TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals = readCorrelFromFile(destPath);
-/*  228 */       dailyReaderCollection = initDailyreader(scripUniverse, dataPath, this.DAILY_START_DATE);
+/*  229 */       String dataPath = this.btGlobal.loginParameter.getDataPath();
+/*  230 */       TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals = readCorrelFromFile(destPath);
+/*  231 */       dailyReaderCollection = initDailyreader(scripUniverse, dataPath, this.DAILY_START_DATE);
 /*      */     }
 /*      */     else
 /*      */     {
-/*  232 */       correlVals = this.mlInputFileGenerator.getCorrelVals();
-/*  233 */       dailyReaderCollection = this.mlInputFileGenerator.getDailyReaderCollection();
+/*  235 */       correlVals = this.mlInputFileGenerator.getCorrelVals();
+/*  236 */       dailyReaderCollection = this.mlInputFileGenerator.getDailyReaderCollection();
 /*      */     }
 /*      */     
-/*  236 */     this.mlPostProcessor = new MLPostProcessor(sourcePath, destPath, this.modelSegmentWiseAssetUniverseMap, this.postModelSelectionSegmentWiseAssetUniverseMap, scripUniverse, 
-/*  237 */       this.btGlobal.loginParameter.getDataPath(), this.backtest, this.machineLearning, this.dateList, 
-/*  238 */       dailyReaderCollection, correlVals, 
-/*  239 */       this.mlPreProcessor.getAlgorithmMap(), this.mlPreProcessor.getTradeStartEndMaps(), this.mlPreProcessor.getTradeStartDateTradeSideMaps(), 
-/*  240 */       this.mlPreProcessor.getTradeMTMMat(), algoLastModifiedTimeStamp, this.postProcess, this.mlParameter.getBias().booleanValue());
+/*  239 */     this.mlPostProcessor = new MLPostProcessor(sourcePath, destPath, this.modelSegmentWiseAssetUniverseMap, this.postModelSelectionSegmentWiseAssetUniverseMap, scripUniverse, 
+/*  240 */       this.btGlobal.loginParameter.getDataPath(), this.backtest, this.machineLearning, this.dateList, 
+/*  241 */       dailyReaderCollection, correlVals, 
+/*  242 */       this.mlPreProcessor.getAlgorithmMap(), this.mlPreProcessor.getTradeStartEndMaps(), this.mlPreProcessor.getTradeStartDateTradeSideMaps(), 
+/*  243 */       this.mlPreProcessor.getTradeMTMMat(), algoLastModifiedTimeStamp, this.postProcess, this.mlParameter.getBias().booleanValue());
 /*      */     
-/*  242 */     this.mlPostProcessor.readOutput(sourcePath, destPath, this.postProcess, this.dateList);
+/*  245 */     this.mlPostProcessor.readOutput(sourcePath, destPath, this.postProcess, this.dateList);
 /*      */   }
 /*      */   
 /*      */   public void endProcess() throws IOException
 /*      */   {
-/*  247 */     HashMap<String, MLAlgo> algorithmMap = this.mlPostProcessor.getAlgorithmMap();
-/*  248 */     CSVWriter mlLogWriter = this.mlPostProcessor.getMlLogWriter();
-/*  249 */     CSVWriter correlLogWriter = this.mlPostProcessor.getCorrelLogWriter();
+/*  250 */     HashMap<String, MLAlgo> algorithmMap = this.mlPostProcessor.getAlgorithmMap();
+/*  251 */     CSVWriter mlLogWriter = this.mlPostProcessor.getMlLogWriter();
+/*  252 */     CSVWriter correlLogWriter = this.mlPostProcessor.getCorrelLogWriter();
 /*      */     try
 /*      */     {
-/*  252 */       for (MLAlgo mlalgo : algorithmMap.values()) {
-/*  253 */         mlalgo.close();
+/*  255 */       for (MLAlgo mlalgo : algorithmMap.values()) {
+/*  256 */         mlalgo.close();
 /*      */       }
 /*      */       
-/*  256 */       mlLogWriter.close();
-/*  257 */       correlLogWriter.close();
+/*  259 */       mlLogWriter.close();
+/*  260 */       correlLogWriter.close();
 /*      */     }
 /*      */     catch (Exception localException) {}
 /*      */   }
@@ -265,103 +268,104 @@
 /*      */   public static HashMap<String, String> createMLOutputMap(BacktesterGlobal btGlobal, MachineLearning machineLearning)
 /*      */     throws IOException
 /*      */   {
-/*  268 */     HashMap<String, String> outputMap = new HashMap();
+/*  271 */     HashMap<String, String> outputMap = new HashMap();
 /*      */     
 /*      */ 
-/*  271 */     File outputFile = new File(btGlobal.loginParameter.getOutputPath());
-/*  272 */     File[] folders = outputFile.listFiles();
-/*  273 */     File[] arrayOfFile1; int j = (arrayOfFile1 = folders).length; for (int i = 0; i < j; i++) { File folder = arrayOfFile1[i];
+/*  274 */     File outputFile = new File(btGlobal.loginParameter.getOutputPath());
+/*  275 */     File[] folders = outputFile.listFiles();
+/*  276 */     File[] arrayOfFile1; int j = (arrayOfFile1 = folders).length; for (int i = 0; i < j; i++) { File folder = arrayOfFile1[i];
 /*      */       
-/*  275 */       String folderTimeStamp = folder.getName();
-/*  276 */       String folderPath = folder.getAbsolutePath();
+/*  278 */       String folderTimeStamp = folder.getName();
+/*  279 */       String folderPath = folder.getAbsolutePath();
 /*      */       
 /*      */ 
-/*  279 */       if (folderTimeStamp.startsWith("ML"))
+/*  282 */       if (folderTimeStamp.startsWith("ML"))
 /*      */       {
 /*      */ 
 /*      */ 
-/*  283 */         if (new File(folderPath + "/Parameters").exists())
+/*  286 */         if (new File(folderPath + "/Parameters").exists())
 /*      */         {
 /*      */ 
 /*      */ 
-/*  287 */           File[] paramFiles = new File(folderPath + "/Parameters").listFiles();
-/*  288 */           File[] arrayOfFile2; int m = (arrayOfFile2 = paramFiles).length; for (int k = 0; k < m; k++) { File paramFile = arrayOfFile2[k];
+/*  290 */           File[] paramFiles = new File(folderPath + "/Parameters").listFiles();
+/*  291 */           File[] arrayOfFile2; int m = (arrayOfFile2 = paramFiles).length; for (int k = 0; k < m; k++) { File paramFile = arrayOfFile2[k];
 /*      */             
-/*  290 */             String fileName = paramFile.getName();
-/*  291 */             String[] fileVal = paramFile.getName().split(" ");
+/*  293 */             String fileName = paramFile.getName();
+/*  294 */             String[] fileVal = paramFile.getName().split(" ");
 /*      */             
-/*  293 */             if (fileName.endsWith("Parameters.csv"))
+/*  296 */             if (fileName.endsWith("Parameters.csv"))
 /*      */             {
 /*      */ 
-/*  296 */               String strategyID = fileVal[0];
-/*  297 */               if (machineLearning.getBacktest().backtestMap.containsKey(strategyID))
+/*  299 */               String strategyID = fileVal[0];
+/*  300 */               if (machineLearning.getBacktest().backtestMap.containsKey(strategyID))
 /*      */               {
 /*      */ 
 /*      */ 
-/*  301 */                 String paramPath = paramFile.getAbsolutePath();
-/*  302 */                 String paramKey = "";
-/*  303 */                 String paramKeyInput = "";
-/*  304 */                 String paramKeyOutput = "";
+/*  304 */                 String paramPath = paramFile.getAbsolutePath();
+/*  305 */                 String paramKey = "";
+/*  306 */                 String paramKeyInput = "";
+/*  307 */                 String paramKeyOutput = "";
 /*      */                 
 /*      */ 
-/*  307 */                 CSVReader reader = new CSVReader(paramPath, ',', 0);
+/*  310 */                 CSVReader reader = new CSVReader(paramPath, ',', 0);
 /*      */                 String[] parameterLine;
-/*  309 */                 while ((parameterLine = reader.getLine()) != null)
+/*  312 */                 while ((parameterLine = reader.getLine()) != null)
 /*      */                 {
 /*      */                   String[] parameterLine;
-/*  312 */                   String parameterName = parameterLine[0];
-/*  313 */                   String parameterValue = parameterLine[1];
+/*  315 */                   String parameterName = parameterLine[0];
+/*  316 */                   String parameterValue = parameterLine[1];
 /*      */                   
 /*      */ 
-/*  316 */                   if (paramKey.equals("")) {
-/*  317 */                     paramKey = parameterValue;
+/*  319 */                   if (paramKey.equals("")) {
+/*  320 */                     paramKey = parameterValue;
 /*      */                   } else {
-/*  319 */                     paramKey = paramKey + "$" + parameterValue;
+/*  322 */                     paramKey = paramKey + "$" + parameterValue;
 /*      */                   }
 /*      */                   
-/*  322 */                   if (!parameterName.startsWith("ML ")) {
-/*  323 */                     if (paramKeyInput.equals("")) {
-/*  324 */                       paramKeyInput = parameterValue;
+/*  325 */                   if ((!parameterName.startsWith("ML ")) || (parameterLine[0].equals("ML Model Merge Type"))) {
+/*  326 */                     if (paramKeyInput.equals("")) {
+/*  327 */                       paramKeyInput = parameterValue;
 /*      */                     } else {
-/*  326 */                       paramKeyInput = paramKeyInput + "$" + parameterValue;
+/*  329 */                       paramKeyInput = paramKeyInput + "$" + parameterValue;
 /*      */                     }
 /*      */                   }
 /*      */                   
-/*  330 */                   if ((!parameterLine[0].equals("ML Consolidation Function")) && 
-/*  331 */                     (!parameterLine[0].equals("ML Segment Asset Count")) && 
-/*  332 */                     (!parameterLine[0].equals("ML Overall Asset Count")) && 
-/*  333 */                     (!parameterLine[0].equals("ML Correl Threshold"))) {
-/*  334 */                     if (paramKeyOutput.equals("")) {
-/*  335 */                       paramKeyOutput = parameterValue;
+/*  333 */                   if ((!parameterLine[0].equals("ML Consolidation Function")) && 
+/*  334 */                     (!parameterLine[0].equals("ML Segment Asset Count")) && 
+/*  335 */                     (!parameterLine[0].equals("ML Overall Asset Count")) && 
+/*  336 */                     (!parameterLine[0].equals("ML Segment Correl Threshold")) && 
+/*  337 */                     (!parameterLine[0].equals("ML Overall Correl Threshold"))) {
+/*  338 */                     if (paramKeyOutput.equals("")) {
+/*  339 */                       paramKeyOutput = parameterValue;
 /*      */                     } else {
-/*  337 */                       paramKeyOutput = paramKeyOutput + "$" + parameterValue;
+/*  341 */                       paramKeyOutput = paramKeyOutput + "$" + parameterValue;
 /*      */                     }
 /*      */                   }
 /*      */                 }
-/*  341 */                 reader.close();
+/*  345 */                 reader.close();
 /*      */                 
 /*      */ 
-/*  344 */                 String primaryKey = "ML " + strategyID + " " + paramKey;
-/*  345 */                 String primaryKeyInput = "ML " + strategyID + " " + paramKeyInput;
-/*  346 */                 String primaryKeyOutput = "ML " + strategyID + " " + paramKeyOutput;
+/*  348 */                 String primaryKey = "ML " + strategyID + " " + paramKey;
+/*  349 */                 String primaryKeyInput = "ML " + strategyID + " " + paramKeyInput;
+/*  350 */                 String primaryKeyOutput = "ML " + strategyID + " " + paramKeyOutput;
 /*      */                 
 /*      */ 
-/*  349 */                 TreeSet<String> factorSet = new TreeSet();
-/*  350 */                 String factorPath = folderPath + "/Parameters/ML Factorlist.csv";
-/*  351 */                 if (new File(factorPath).exists()) {
-/*  352 */                   reader = new CSVReader(factorPath, ',', 0);
+/*  353 */                 TreeSet<String> factorSet = new TreeSet();
+/*  354 */                 String factorPath = folderPath + "/Parameters/ML Factorlist.csv";
+/*  355 */                 if (new File(factorPath).exists()) {
+/*  356 */                   reader = new CSVReader(factorPath, ',', 0);
 /*      */                   String[] tsLine;
-/*  354 */                   while ((tsLine = reader.getLine()) != null) { String[] tsLine;
-/*  355 */                     factorSet.add(tsLine[0]); }
-/*  356 */                   reader.close();
+/*  358 */                   while ((tsLine = reader.getLine()) != null) { String[] tsLine;
+/*  359 */                     factorSet.add(tsLine[0]); }
+/*  360 */                   reader.close();
 /*      */                 }
 /*      */                 
 /*      */ 
-/*  360 */                 for (String factor : factorSet)
+/*  364 */                 for (String factor : factorSet)
 /*      */                 {
-/*  362 */                   primaryKey = primaryKey + "$" + factor;
-/*  363 */                   primaryKeyInput = primaryKeyInput + "$" + factor;
-/*  364 */                   primaryKeyOutput = primaryKeyOutput + "$" + factor;
+/*  366 */                   primaryKey = primaryKey + "$" + factor;
+/*  367 */                   primaryKeyInput = primaryKeyInput + "$" + factor;
+/*  368 */                   primaryKeyOutput = primaryKeyOutput + "$" + factor;
 /*      */                 }
 /*      */                 
 /*      */ 
@@ -370,59 +374,59 @@
 /*      */ 
 /*      */ 
 /*      */ 
-/*  373 */                 ArrayList<String> scripListDateList = new ArrayList();
-/*  374 */                 String scripParameterPath = folderPath + "/Parameters/" + strategyID + " ScripListDateMap.csv";
-/*  375 */                 if (new File(scripParameterPath).exists()) {
-/*  376 */                   reader = new CSVReader(scripParameterPath, ',', 0);
+/*  377 */                 TreeSet<String> scripListDateList = new TreeSet();
+/*  378 */                 String scripParameterPath = folderPath + "/Parameters/" + strategyID + " ScripListDateMap.csv";
+/*  379 */                 if (new File(scripParameterPath).exists()) {
+/*  380 */                   reader = new CSVReader(scripParameterPath, ',', 0);
 /*      */                   String[] tsLine;
-/*  378 */                   while ((tsLine = reader.getLine()) != null) { String[] tsLine;
-/*  379 */                     scripListDateList.add(tsLine[0] + "," + tsLine[1] + "," + tsLine[2]); }
-/*  380 */                   reader.close();
+/*  382 */                   while ((tsLine = reader.getLine()) != null) { String[] tsLine;
+/*  383 */                     scripListDateList.add(tsLine[0] + "," + tsLine[1] + "," + tsLine[2]); }
+/*  384 */                   reader.close();
 /*      */                 }
 /*      */                 
 /*      */ 
-/*  384 */                 boolean fileError = false;
+/*  388 */                 boolean fileError = false;
 /*      */                 
 /*      */ 
-/*  387 */                 for (String scripListDate : scripListDateList)
+/*  391 */                 for (String scripListDate : scripListDateList)
 /*      */                 {
-/*  389 */                   String[] scripListDateVal = scripListDate.split(",");
-/*  390 */                   String scripListID = scripListDateVal[0];
+/*  393 */                   String[] scripListDateVal = scripListDate.split(",");
+/*  394 */                   String scripListID = scripListDateVal[0];
 /*      */                   
 /*      */ 
-/*  393 */                   String scripFileName = folderPath + "/Parameters/" + scripListID + " ScripSet.csv";
-/*  394 */                   CSVReader scripReader = new CSVReader(scripFileName, ',', 0);
+/*  397 */                   String scripFileName = folderPath + "/Parameters/" + scripListID + " ScripSet.csv";
+/*  398 */                   CSVReader scripReader = new CSVReader(scripFileName, ',', 0);
 /*      */                   
 /*      */ 
-/*  397 */                   String scripKey = scripListDate;
-/*  398 */                   String[] scripLine; while ((scripLine = scripReader.getLine()) != null) { String[] scripLine;
-/*  399 */                     String scripID = scripLine[0];
+/*  401 */                   String scripKey = scripListDate;
+/*  402 */                   String[] scripLine; while ((scripLine = scripReader.getLine()) != null) { String[] scripLine;
+/*  403 */                     String scripID = scripLine[0];
 /*      */                     
-/*  401 */                     String mtmPath = folderPath + "/MTM Data/" + strategyID + " " + scripListID + "/" + scripID + 
-/*  402 */                       " MTM.csv";
-/*  403 */                     String tradePath = folderPath + "/Trade Data/" + strategyID + " " + scripListID + "/" + 
-/*  404 */                       scripID + " Tradebook.csv";
+/*  405 */                     String mtmPath = folderPath + "/MTM Data/" + strategyID + " " + scripListID + "/" + scripID + 
+/*  406 */                       " MTM.csv";
+/*  407 */                     String tradePath = folderPath + "/Trade Data/" + strategyID + " " + scripListID + "/" + 
+/*  408 */                       scripID + " Tradebook.csv";
 /*      */                     
-/*  406 */                     if ((!new File(mtmPath).exists()) || (!new File(tradePath).exists())) {
-/*  407 */                       fileError = true;
-/*  408 */                       break;
+/*  410 */                     if ((!new File(mtmPath).exists()) || (!new File(tradePath).exists())) {
+/*  411 */                       fileError = true;
+/*  412 */                       break;
 /*      */                     }
-/*  410 */                     scripKey = scripKey + "|" + scripID;
+/*  414 */                     scripKey = scripKey + "|" + scripID;
 /*      */                   }
-/*  412 */                   scripReader.close();
+/*  416 */                   scripReader.close();
 /*      */                   
 /*      */ 
-/*  415 */                   if (fileError) {
+/*  419 */                   if (fileError) {
 /*      */                     break;
 /*      */                   }
 /*      */                   
-/*  419 */                   primaryKey = primaryKey + "$" + scripKey;
-/*  420 */                   primaryKeyInput = primaryKeyInput + "$" + scripKey;
-/*  421 */                   primaryKeyOutput = primaryKeyOutput + "$" + scripKey;
+/*  423 */                   primaryKey = primaryKey + "$" + scripKey;
+/*  424 */                   primaryKeyInput = primaryKeyInput + "$" + scripKey;
+/*  425 */                   primaryKeyOutput = primaryKeyOutput + "$" + scripKey;
 /*      */                 }
 /*      */                 
 /*      */ 
-/*  425 */                 if (!fileError)
+/*  429 */                 if (!fileError)
 /*      */                 {
 /*      */ 
 /*      */ 
@@ -433,138 +437,149 @@
 /*      */ 
 /*      */ 
 /*      */ 
-/*  436 */                   outputMap.put(primaryKey, folderTimeStamp);
-/*  437 */                   outputMap.put(primaryKeyInput, folderTimeStamp);
-/*  438 */                   outputMap.put(primaryKeyOutput, folderTimeStamp);
+/*  440 */                   outputMap.put(primaryKey, folderTimeStamp);
+/*  441 */                   outputMap.put(primaryKeyInput, folderTimeStamp);
+/*  442 */                   outputMap.put(primaryKeyOutput, folderTimeStamp);
 /*      */                 }
 /*      */               }
 /*      */             } } } } }
-/*  442 */     return outputMap;
+/*  446 */     return outputMap;
 /*      */   }
 /*      */   
 /*      */   public static boolean checkMLOutput(BacktesterGlobal btGlobal, MachineLearning machineLearning, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  448 */     boolean outputCheck = true;
+/*  452 */     boolean outputCheck = true;
 /*      */     
-/*  450 */     String backtestTimestamp = machineLearning.getBacktest().timeStamp;
+/*  454 */     String backtestTimestamp = machineLearning.getBacktest().timeStamp;
 /*      */     
-/*  452 */     for (String strategyID : machineLearning.getBacktest().backtestMap.keySet())
+/*  456 */     for (String strategyID : machineLearning.getBacktest().backtestMap.keySet())
 /*      */     {
 /*      */ 
-/*  455 */       String backtestParameters = getBacktestParameters(btGlobal, strategyID, backtestTimestamp);
+/*  459 */       String backtestParameters = getBacktestParameters(btGlobal, strategyID, backtestTimestamp);
 /*      */       
 /*      */ 
-/*  458 */       String mlParameters = machineLearning.getMlParameter().getMLParametersAsKey();
+/*  462 */       String mlParameters = machineLearning.getMlParameter().getMLParametersAsKey();
 /*      */       
 /*      */ 
-/*  461 */       String parameterString = backtestParameters + "$" + mlParameters;
+/*  465 */       String parameterString = backtestParameters + "$" + mlParameters;
 /*      */       
 /*      */ 
-/*  464 */       String currentKey = "ML " + strategyID + " " + parameterString;
+/*  468 */       String currentKey = "ML " + strategyID + " " + parameterString;
 /*      */       
 /*      */ 
-/*  467 */       String scripListDate = getScripDateKey(btGlobal, strategyID, backtestTimestamp);
+/*  471 */       String scripListDate = getScripDateKey(btGlobal, strategyID, backtestTimestamp);
 /*      */       
-/*  469 */       currentKey = currentKey + "$" + scripListDate;
+/*  473 */       currentKey = currentKey + "$" + scripListDate;
 /*      */       
 /*      */ 
-/*  472 */       boolean curOutputCheck = checkAndTransferML(btGlobal, machineLearning, strategyID, currentKey, mlOutputMap);
-/*  473 */       if (outputCheck)
-/*  474 */         outputCheck = curOutputCheck;
+/*  476 */       boolean curOutputCheck = checkAndTransferML(btGlobal, machineLearning, strategyID, currentKey, mlOutputMap);
+/*  477 */       if (outputCheck)
+/*  478 */         outputCheck = curOutputCheck;
 /*      */     }
-/*  476 */     return outputCheck;
+/*  480 */     return outputCheck;
 /*      */   }
 /*      */   
 /*      */   public static boolean checkMLIOutput(BacktesterGlobal btGlobal, MachineLearning machineLearning, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  482 */     boolean outputCheck = true;
+/*  486 */     boolean outputCheck = true;
 /*      */     
-/*  484 */     String backtestTimestamp = machineLearning.getBacktest().timeStamp;
+/*  488 */     String backtestTimestamp = machineLearning.getBacktest().timeStamp;
 /*      */     
-/*  486 */     for (String strategyID : machineLearning.getBacktest().backtestMap.keySet())
+/*  490 */     for (String strategyID : machineLearning.getBacktest().backtestMap.keySet())
 /*      */     {
 /*      */ 
-/*  489 */       String backtestParameters = getBacktestParameters(btGlobal, strategyID, backtestTimestamp);
+/*  493 */       String backtestParameters = getBacktestParameters(btGlobal, strategyID, backtestTimestamp);
 /*      */       
 /*      */ 
-/*  492 */       String mlFactorParameters = machineLearning.getMlParameter().getFactorParameters();
+/*  496 */       String mlFactorParameters = machineLearning.getMlParameter().getMLParametersAsInputKey();
 /*      */       
 /*      */ 
-/*  495 */       String paramString = backtestParameters + "$" + mlFactorParameters;
+/*  499 */       String paramString = backtestParameters + "$" + mlFactorParameters;
 /*      */       
 /*      */ 
-/*  498 */       String currentKey = "ML " + strategyID + " " + paramString;
+/*  502 */       String currentKey = "ML " + strategyID + " " + paramString;
 /*      */       
 /*      */ 
-/*  501 */       String scripListDate = getScripDateKey(btGlobal, strategyID, backtestTimestamp);
+/*  505 */       String scripListDate = getScripDateKey(btGlobal, strategyID, backtestTimestamp);
 /*      */       
-/*  503 */       currentKey = currentKey + "$" + scripListDate;
+/*  507 */       currentKey = currentKey + "$" + scripListDate;
 /*      */       
 /*      */ 
-/*  506 */       boolean curOutputCheck = checkAndTransferMLInput(btGlobal, machineLearning, strategyID, currentKey, 
-/*  507 */         mlOutputMap);
-/*  508 */       if (outputCheck)
-/*  509 */         outputCheck = curOutputCheck;
+/*  510 */       boolean curOutputCheck = checkAndTransferMLInput(btGlobal, machineLearning, strategyID, currentKey, 
+/*  511 */         mlOutputMap);
+/*  512 */       if (outputCheck)
+/*  513 */         outputCheck = curOutputCheck;
 /*      */     }
-/*  511 */     return outputCheck;
+/*  515 */     return outputCheck;
 /*      */   }
 /*      */   
 /*      */   public static boolean checkMLOOutput(BacktesterGlobal btGlobal, MachineLearning machineLearning, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  517 */     boolean outputCheck = true;
+/*  521 */     boolean outputCheck = true;
 /*      */     
-/*  519 */     String backtestTimestamp = machineLearning.getBacktest().timeStamp;
+/*  523 */     String backtestTimestamp = machineLearning.getBacktest().timeStamp;
 /*      */     
-/*  521 */     for (String strategyID : machineLearning.getBacktest().backtestMap.keySet())
+/*  525 */     for (String strategyID : machineLearning.getBacktest().backtestMap.keySet())
 /*      */     {
 /*      */ 
-/*  524 */       String backtestParameters = getBacktestParameters(btGlobal, strategyID, backtestTimestamp);
+/*  528 */       String backtestParameters = getBacktestParameters(btGlobal, strategyID, backtestTimestamp);
 /*      */       
 /*      */ 
-/*  527 */       String mlParameters = machineLearning.getMlParameter().getMLParametersAsOutputKey();
+/*  531 */       String mlParameters = machineLearning.getMlParameter().getMLParametersAsOutputKey();
 /*      */       
 /*      */ 
-/*  530 */       String parameterString = backtestParameters + "$" + mlParameters;
+/*  534 */       String parameterString = backtestParameters + "$" + mlParameters;
 /*      */       
 /*      */ 
-/*  533 */       String currentKey = "ML " + strategyID + " " + parameterString;
+/*  537 */       String currentKey = "ML " + strategyID + " " + parameterString;
 /*      */       
 /*      */ 
-/*  536 */       String scripListDate = getScripDateKey(btGlobal, strategyID, backtestTimestamp);
+/*  540 */       String scripListDate = getScripDateKey(btGlobal, strategyID, backtestTimestamp);
 /*      */       
-/*  538 */       currentKey = currentKey + "$" + scripListDate;
+/*  542 */       currentKey = currentKey + "$" + scripListDate;
 /*      */       
 /*      */ 
-/*  541 */       boolean curOutputCheck = checkAndTransferMLOutput(btGlobal, machineLearning, strategyID, currentKey, 
-/*  542 */         mlOutputMap);
-/*  543 */       if (outputCheck)
-/*  544 */         outputCheck = curOutputCheck;
+/*  545 */       boolean curOutputCheck = checkAndTransferMLOutput(btGlobal, machineLearning, strategyID, currentKey, 
+/*  546 */         mlOutputMap);
+/*  547 */       if (outputCheck)
+/*  548 */         outputCheck = curOutputCheck;
 /*      */     }
-/*  546 */     return outputCheck;
+/*  550 */     return outputCheck;
 /*      */   }
 /*      */   
 /*      */   public static boolean checkAndTransferML(BacktesterGlobal btGlobal, MachineLearning machineLearning, String strategy, String currentKey, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  552 */     String timeStamp = (String)mlOutputMap.get(currentKey);
-/*  553 */     String mlTimeStamp = machineLearning.getTimeStamp();
+/*  556 */     String timeStamp = (String)mlOutputMap.get(currentKey);
+/*  557 */     String mlTimeStamp = machineLearning.getTimeStamp();
 /*      */     
-/*  555 */     if (timeStamp == null) {
-/*  556 */       return false;
+/*  559 */     if (timeStamp == null) {
+/*  560 */       return false;
 /*      */     }
 /*      */     
 /*      */ 
 /*      */ 
-/*  561 */     String outputPath = btGlobal.loginParameter.getOutputPath();
+/*  565 */     String outputPath = btGlobal.loginParameter.getOutputPath();
+/*  566 */     String sMTMPath = outputPath + "/" + timeStamp;
+/*  567 */     String mtmPath = outputPath + "/" + mlTimeStamp;
+/*  568 */     destPath = mtmPath;
+/*  569 */     File sMTMFolder = new File(sMTMPath);
+/*  570 */     File mtmFolder = new File(mtmPath);
 /*      */     
-/*  563 */     String sMTMPath = outputPath + "/" + timeStamp;
-/*  564 */     String mtmPath = outputPath + "/" + mlTimeStamp;
-/*  565 */     File sMTMFolder = new File(sMTMPath);
-/*  566 */     File mtmFolder = new File(mtmPath);
-/*  567 */     sMTMFolder.renameTo(mtmFolder);
+/*  572 */     sMTMFolder.renameTo(mtmFolder);
+/*      */     
+/*      */ 
+/*  575 */     File paramFolder = new File(mtmPath + "/Parameters");
+/*      */     File[] arrayOfFile;
+/*  577 */     int j = (arrayOfFile = paramFolder.listFiles()).length; for (int i = 0; i < j; i++) { File file = arrayOfFile[i];
+/*      */       
+/*  579 */       if (file.getName().contains("ScripListDateMap")) {
+/*  580 */         file.delete();
+/*      */       }
+/*      */     }
 /*      */     
 /*      */ 
 /*      */ 
@@ -633,173 +648,173 @@
 /*      */ 
 /*      */ 
 /*      */ 
-/*  636 */     return true;
+/*  651 */     return true;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public static boolean checkAndTransferMLOutput(BacktesterGlobal btGlobal, MachineLearning machineLearning, String strategy, String currentKey, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  643 */     String timeStamp = (String)mlOutputMap.get(currentKey);
+/*  658 */     String timeStamp = (String)mlOutputMap.get(currentKey);
 /*      */     
-/*  645 */     String mlTimeStamp = machineLearning.getTimeStamp();
+/*  660 */     String mlTimeStamp = machineLearning.getTimeStamp();
 /*      */     
-/*  647 */     if (timeStamp == null) {
-/*  648 */       return false;
+/*  662 */     if (timeStamp == null) {
+/*  663 */       return false;
 /*      */     }
 /*      */     
 /*      */ 
-/*  652 */     String outputPath = btGlobal.loginParameter.getOutputPath();
+/*  667 */     String outputPath = btGlobal.loginParameter.getOutputPath();
 /*      */     
 /*      */ 
-/*  655 */     String sParamPath = outputPath + "/" + timeStamp + "/Parameters";
-/*  656 */     String paramPath = outputPath + "/" + mlTimeStamp + "/Parameters";
-/*  657 */     File sParamFolder = new File(sParamPath);
-/*  658 */     File paramFolder = new File(paramPath);
-/*  659 */     if (!paramFolder.exists())
-/*  660 */       paramFolder.mkdirs();
-/*  661 */     File[] paramFileList = sParamFolder.listFiles();
-/*  662 */     File[] arrayOfFile1; int j = (arrayOfFile1 = paramFileList).length; for (int i = 0; i < j; i++) { File file = arrayOfFile1[i];
-/*  663 */       String fStrategy = file.getName().split(" ")[0];
-/*  664 */       if (fStrategy.equals(strategy)) {
-/*  665 */         String newPath = paramPath + "/" + file.getName();
-/*  666 */         btGlobal.copyFile(file, new File(newPath));
+/*  670 */     String sParamPath = outputPath + "/" + timeStamp + "/Parameters";
+/*  671 */     String paramPath = outputPath + "/" + mlTimeStamp + "/Parameters";
+/*  672 */     File sParamFolder = new File(sParamPath);
+/*  673 */     File paramFolder = new File(paramPath);
+/*  674 */     if (!paramFolder.exists())
+/*  675 */       paramFolder.mkdirs();
+/*  676 */     File[] paramFileList = sParamFolder.listFiles();
+/*  677 */     File[] arrayOfFile1; int j = (arrayOfFile1 = paramFileList).length; for (int i = 0; i < j; i++) { File file = arrayOfFile1[i];
+/*  678 */       String fStrategy = file.getName().split(" ")[0];
+/*  679 */       if (fStrategy.equals(strategy)) {
+/*  680 */         String newPath = paramPath + "/" + file.getName();
+/*  681 */         btGlobal.copyFile(file, new File(newPath));
 /*      */       }
-/*  668 */       if (fStrategy.equals("ML")) {
-/*  669 */         String newPath = paramPath + "/" + file.getName();
-/*  670 */         btGlobal.copyFile(file, new File(newPath));
-/*      */       }
-/*      */     }
-/*      */     
-/*      */ 
-/*  675 */     String sMLPath = outputPath + "/" + timeStamp + "/ML";
-/*  676 */     String mlPath = outputPath + "/" + mlTimeStamp + "/ML";
-/*  677 */     File sMLFolder = new File(sMLPath);
-/*  678 */     File mlFolder = new File(mlPath);
-/*  679 */     if (!mlFolder.exists())
-/*  680 */       mlFolder.mkdirs();
-/*  681 */     File[] mlFileList = sMLFolder.listFiles();
-/*  682 */     File[] arrayOfFile2; int m = (arrayOfFile2 = mlFileList).length; for (int k = 0; k < m; k++) { File file = arrayOfFile2[k];
-/*  683 */       String newPath = mlPath + "/" + file.getName();
-/*  684 */       if (!new File(newPath).exists())
+/*  683 */       if (fStrategy.equals("ML")) {
+/*  684 */         String newPath = paramPath + "/" + file.getName();
 /*  685 */         btGlobal.copyFile(file, new File(newPath));
+/*      */       }
 /*      */     }
-/*  687 */     return true;
+/*      */     
+/*      */ 
+/*  690 */     String sMLPath = outputPath + "/" + timeStamp + "/ML";
+/*  691 */     String mlPath = outputPath + "/" + mlTimeStamp + "/ML";
+/*  692 */     File sMLFolder = new File(sMLPath);
+/*  693 */     File mlFolder = new File(mlPath);
+/*  694 */     if (!mlFolder.exists())
+/*  695 */       mlFolder.mkdirs();
+/*  696 */     File[] mlFileList = sMLFolder.listFiles();
+/*  697 */     File[] arrayOfFile2; int m = (arrayOfFile2 = mlFileList).length; for (int k = 0; k < m; k++) { File file = arrayOfFile2[k];
+/*  698 */       String newPath = mlPath + "/" + file.getName();
+/*  699 */       if (!new File(newPath).exists())
+/*  700 */         btGlobal.copyFile(file, new File(newPath));
+/*      */     }
+/*  702 */     return true;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public static boolean checkAndTransferMLAOutput(BacktesterGlobal btGlobal, MachineLearning machineLearning, String strategy, String currentKey, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  694 */     String timeStamp = (String)mlOutputMap.get(currentKey);
+/*  709 */     String timeStamp = (String)mlOutputMap.get(currentKey);
 /*      */     
-/*  696 */     String mlTimeStamp = machineLearning.getTimeStamp();
+/*  711 */     String mlTimeStamp = machineLearning.getTimeStamp();
 /*      */     
-/*  698 */     if (timeStamp == null) {
-/*  699 */       return false;
+/*  713 */     if (timeStamp == null) {
+/*  714 */       return false;
 /*      */     }
 /*      */     
 /*      */ 
-/*  703 */     String outputPath = btGlobal.loginParameter.getOutputPath();
+/*  718 */     String outputPath = btGlobal.loginParameter.getOutputPath();
 /*      */     
 /*      */ 
-/*  706 */     String sParamPath = outputPath + "/" + timeStamp + "/Parameters";
-/*  707 */     String paramPath = outputPath + "/" + mlTimeStamp + "/Parameters";
-/*  708 */     File sParamFolder = new File(sParamPath);
-/*  709 */     File paramFolder = new File(paramPath);
-/*  710 */     if (!paramFolder.exists())
-/*  711 */       paramFolder.mkdirs();
-/*  712 */     File[] paramFileList = sParamFolder.listFiles();
-/*  713 */     File[] arrayOfFile1; int j = (arrayOfFile1 = paramFileList).length; for (int i = 0; i < j; i++) { File file = arrayOfFile1[i];
-/*  714 */       String fStrategy = file.getName().split(" ")[0];
-/*  715 */       if (fStrategy.equals(strategy)) {
-/*  716 */         String newPath = paramPath + "/" + file.getName();
-/*  717 */         btGlobal.copyFile(file, new File(newPath));
+/*  721 */     String sParamPath = outputPath + "/" + timeStamp + "/Parameters";
+/*  722 */     String paramPath = outputPath + "/" + mlTimeStamp + "/Parameters";
+/*  723 */     File sParamFolder = new File(sParamPath);
+/*  724 */     File paramFolder = new File(paramPath);
+/*  725 */     if (!paramFolder.exists())
+/*  726 */       paramFolder.mkdirs();
+/*  727 */     File[] paramFileList = sParamFolder.listFiles();
+/*  728 */     File[] arrayOfFile1; int j = (arrayOfFile1 = paramFileList).length; for (int i = 0; i < j; i++) { File file = arrayOfFile1[i];
+/*  729 */       String fStrategy = file.getName().split(" ")[0];
+/*  730 */       if (fStrategy.equals(strategy)) {
+/*  731 */         String newPath = paramPath + "/" + file.getName();
+/*  732 */         btGlobal.copyFile(file, new File(newPath));
 /*      */       }
-/*  719 */       if (fStrategy.equals("ML")) {
-/*  720 */         String newPath = paramPath + "/" + file.getName();
-/*  721 */         btGlobal.copyFile(file, new File(newPath));
+/*  734 */       if (fStrategy.equals("ML")) {
+/*  735 */         String newPath = paramPath + "/" + file.getName();
+/*  736 */         btGlobal.copyFile(file, new File(newPath));
 /*      */       }
 /*      */     }
 /*      */     
 /*      */ 
-/*  726 */     String sMLPath = outputPath + "/" + timeStamp + "/ML";
-/*  727 */     String mlPath = outputPath + "/" + mlTimeStamp + "/ML";
-/*  728 */     File sMLFolder = new File(sMLPath);
-/*  729 */     File mlFolder = new File(mlPath);
-/*  730 */     if (!mlFolder.exists())
-/*  731 */       mlFolder.mkdirs();
-/*  732 */     File[] mlFileList = sMLFolder.listFiles();
-/*  733 */     File[] arrayOfFile2; int m = (arrayOfFile2 = mlFileList).length; for (int k = 0; k < m; k++) { File file = arrayOfFile2[k];
-/*  734 */       if (file.getName().contains(" RData")) {
-/*  735 */         String newPath = mlPath + "/" + file.getName();
-/*  736 */         if (!new File(newPath).exists())
-/*  737 */           btGlobal.copyFile(file, new File(newPath));
+/*  741 */     String sMLPath = outputPath + "/" + timeStamp + "/ML";
+/*  742 */     String mlPath = outputPath + "/" + mlTimeStamp + "/ML";
+/*  743 */     File sMLFolder = new File(sMLPath);
+/*  744 */     File mlFolder = new File(mlPath);
+/*  745 */     if (!mlFolder.exists())
+/*  746 */       mlFolder.mkdirs();
+/*  747 */     File[] mlFileList = sMLFolder.listFiles();
+/*  748 */     File[] arrayOfFile2; int m = (arrayOfFile2 = mlFileList).length; for (int k = 0; k < m; k++) { File file = arrayOfFile2[k];
+/*  749 */       if (file.getName().contains(" RData")) {
+/*  750 */         String newPath = mlPath + "/" + file.getName();
+/*  751 */         if (!new File(newPath).exists())
+/*  752 */           btGlobal.copyFile(file, new File(newPath));
 /*      */       }
 /*      */     }
-/*  740 */     return true;
+/*  755 */     return true;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public static boolean checkAndTransferMLInput(BacktesterGlobal btGlobal, MachineLearning machineLearning, String strategy, String currentKey, HashMap<String, String> mlOutputMap)
 /*      */     throws IOException
 /*      */   {
-/*  747 */     String timeStamp = (String)mlOutputMap.get(currentKey);
+/*  762 */     String timeStamp = (String)mlOutputMap.get(currentKey);
 /*      */     
-/*  749 */     String mlTimeStamp = machineLearning.getTimeStamp();
+/*  764 */     String mlTimeStamp = machineLearning.getTimeStamp();
 /*      */     
-/*  751 */     if (timeStamp == null) {
-/*  752 */       return false;
+/*  766 */     if (timeStamp == null) {
+/*  767 */       return false;
 /*      */     }
 /*      */     
 /*      */ 
-/*  756 */     String outputPath = btGlobal.loginParameter.getOutputPath();
+/*  771 */     String outputPath = btGlobal.loginParameter.getOutputPath();
 /*      */     
 /*      */ 
-/*  759 */     String sMLPath = outputPath + "/" + timeStamp + "/ML";
-/*  760 */     String mlPath = outputPath + "/" + mlTimeStamp + "/ML";
-/*  761 */     File sMLFolder = new File(sMLPath);
-/*  762 */     File mlFolder = new File(mlPath);
-/*  763 */     if (!mlFolder.exists())
-/*  764 */       mlFolder.mkdirs();
-/*  765 */     File[] mlFileList = sMLFolder.listFiles();
-/*  766 */     File[] arrayOfFile1; int j = (arrayOfFile1 = mlFileList).length; for (int i = 0; i < j; i++) { File file = arrayOfFile1[i];
-/*  767 */       if (file.getName().contains("Input")) {
-/*  768 */         String newPath = mlPath + "/" + file.getName();
-/*  769 */         if (!new File(newPath).exists())
-/*  770 */           btGlobal.copyFile(file, new File(newPath));
-/*  771 */       } else if (file.getName().contains("DailyCorrelLog")) {
-/*  772 */         String newPath = mlPath + "/" + file.getName();
-/*  773 */         if (!new File(newPath).exists())
-/*  774 */           btGlobal.copyFile(file, new File(newPath));
+/*  774 */     String sMLPath = outputPath + "/" + timeStamp + "/ML";
+/*  775 */     String mlPath = outputPath + "/" + mlTimeStamp + "/ML";
+/*  776 */     File sMLFolder = new File(sMLPath);
+/*  777 */     File mlFolder = new File(mlPath);
+/*  778 */     if (!mlFolder.exists())
+/*  779 */       mlFolder.mkdirs();
+/*  780 */     File[] mlFileList = sMLFolder.listFiles();
+/*  781 */     File[] arrayOfFile1; int j = (arrayOfFile1 = mlFileList).length; for (int i = 0; i < j; i++) { File file = arrayOfFile1[i];
+/*  782 */       if (file.getName().contains("Input")) {
+/*  783 */         String newPath = mlPath + "/" + file.getName();
+/*  784 */         if (!new File(newPath).exists())
+/*  785 */           btGlobal.copyFile(file, new File(newPath));
+/*  786 */       } else if (file.getName().contains("DailyCorrelLog")) {
+/*  787 */         String newPath = mlPath + "/" + file.getName();
+/*  788 */         if (!new File(newPath).exists())
+/*  789 */           btGlobal.copyFile(file, new File(newPath));
 /*      */       }
 /*      */     }
-/*  777 */     return true;
+/*  792 */     return true;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public static String getBacktestParameters(BacktesterGlobal btGlobal, String strategyID, String backtestTimestamp)
 /*      */     throws IOException
 /*      */   {
-/*  784 */     String basePath = btGlobal.loginParameter.getOutputPath() + "/" + backtestTimestamp;
+/*  799 */     String basePath = btGlobal.loginParameter.getOutputPath() + "/" + backtestTimestamp;
 /*      */     
-/*  786 */     if (!new File(basePath + "/Parameters").exists()) {
-/*  787 */       return null;
+/*  801 */     if (!new File(basePath + "/Parameters").exists()) {
+/*  802 */       return null;
 /*      */     }
 /*      */     
-/*  790 */     String paramPath = basePath + "/Parameters/" + strategyID + " Parameters.csv";
-/*  791 */     String strategyParameters = "";
-/*  792 */     if (new File(paramPath).exists())
+/*  805 */     String paramPath = basePath + "/Parameters/" + strategyID + " Parameters.csv";
+/*  806 */     String strategyParameters = "";
+/*  807 */     if (new File(paramPath).exists())
 /*      */     {
-/*  794 */       CSVReader reader = new CSVReader(paramPath, ',', 0);
+/*  809 */       CSVReader reader = new CSVReader(paramPath, ',', 0);
 /*      */       String[] tsLine;
-/*  796 */       while ((tsLine = reader.getLine()) != null) { String[] tsLine;
-/*  797 */         if (strategyParameters.equals("")) {
-/*  798 */           strategyParameters = tsLine[1];
+/*  811 */       while ((tsLine = reader.getLine()) != null) { String[] tsLine;
+/*  812 */         if (strategyParameters.equals("")) {
+/*  813 */           strategyParameters = tsLine[1];
 /*      */         } else
-/*  800 */           strategyParameters = strategyParameters + "$" + tsLine[1];
+/*  815 */           strategyParameters = strategyParameters + "$" + tsLine[1];
 /*      */       }
-/*  802 */       reader.close();
+/*  817 */       reader.close();
 /*      */     }
 /*      */     
 /*      */ 
@@ -807,65 +822,65 @@
 /*      */ 
 /*      */ 
 /*      */ 
-/*  810 */     return strategyParameters;
+/*  825 */     return strategyParameters;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public static String getScripDateKey(BacktesterGlobal btGlobal, String strategyID, String timestamp)
 /*      */     throws IOException
 /*      */   {
-/*  817 */     String basePath = btGlobal.loginParameter.getOutputPath() + "/" + timestamp;
+/*  832 */     String basePath = btGlobal.loginParameter.getOutputPath() + "/" + timestamp;
 /*      */     
-/*  819 */     if (!new File(basePath + "/Parameters").exists()) {
-/*  820 */       return null;
+/*  834 */     if (!new File(basePath + "/Parameters").exists()) {
+/*  835 */       return null;
 /*      */     }
 /*      */     
-/*  823 */     ArrayList<String> scripListDateList = new ArrayList();
-/*  824 */     String scripParameterPath = basePath + "/Parameters/" + strategyID + " ScripListDateMap.csv";
-/*  825 */     if (new File(scripParameterPath).exists()) {
-/*  826 */       CSVReader reader = new CSVReader(scripParameterPath, ',', 0);
+/*  838 */     TreeSet<String> scripListDateList = new TreeSet();
+/*  839 */     String scripParameterPath = basePath + "/Parameters/" + strategyID + " ScripListDateMap.csv";
+/*  840 */     if (new File(scripParameterPath).exists()) {
+/*  841 */       CSVReader reader = new CSVReader(scripParameterPath, ',', 0);
 /*      */       String[] tsLine;
-/*  828 */       while ((tsLine = reader.getLine()) != null) { String[] tsLine;
-/*  829 */         scripListDateList.add(tsLine[0] + "," + tsLine[1] + "," + tsLine[2]);
+/*  843 */       while ((tsLine = reader.getLine()) != null) { String[] tsLine;
+/*  844 */         scripListDateList.add(tsLine[0] + "," + tsLine[1] + "," + tsLine[2]);
 /*      */       }
 /*      */     }
 /*      */     
-/*  833 */     String scripDateKey = null;
-/*  834 */     for (String scripListDate : scripListDateList)
+/*  848 */     String scripDateKey = null;
+/*  849 */     for (String scripListDate : scripListDateList)
 /*      */     {
-/*  836 */       String[] scripListDateVal = scripListDate.split(",");
-/*  837 */       String scripListID = scripListDateVal[0];
+/*  851 */       String[] scripListDateVal = scripListDate.split(",");
+/*  852 */       String scripListID = scripListDateVal[0];
 /*      */       
 /*      */ 
-/*  840 */       String scripFileName = basePath + "/Parameters/" + scripListID + " ScripSet.csv";
-/*  841 */       CSVReader scripReader = new CSVReader(scripFileName, ',', 0);
+/*  855 */       String scripFileName = basePath + "/Parameters/" + scripListID + " ScripSet.csv";
+/*  856 */       CSVReader scripReader = new CSVReader(scripFileName, ',', 0);
 /*      */       
-/*  843 */       boolean fileError = false;
+/*  858 */       boolean fileError = false;
 /*      */       
-/*  845 */       if (scripDateKey == null) {
-/*  846 */         scripDateKey = scripListDate;
+/*  860 */       if (scripDateKey == null) {
+/*  861 */         scripDateKey = scripListDate;
 /*      */       } else
-/*  848 */         scripDateKey = scripDateKey + "$" + scripListDate;
-/*  849 */       String[] scripLine; while ((scripLine = scripReader.getLine()) != null) { String[] scripLine;
-/*  850 */         String scripID = scripLine[0];
+/*  863 */         scripDateKey = scripDateKey + "$" + scripListDate;
+/*  864 */       String[] scripLine; while ((scripLine = scripReader.getLine()) != null) { String[] scripLine;
+/*  865 */         String scripID = scripLine[0];
 /*      */         
-/*  852 */         String mtmPath = basePath + "/MTM Data/" + strategyID + " " + scripListID + "/" + scripID + " MTM.csv";
-/*  853 */         String tradePath = basePath + "/Trade Data/" + strategyID + " " + scripListID + "/" + scripID + 
-/*  854 */           " Tradebook.csv";
+/*  867 */         String mtmPath = basePath + "/MTM Data/" + strategyID + " " + scripListID + "/" + scripID + " MTM.csv";
+/*  868 */         String tradePath = basePath + "/Trade Data/" + strategyID + " " + scripListID + "/" + scripID + 
+/*  869 */           " Tradebook.csv";
 /*      */         
-/*  856 */         if ((!new File(mtmPath).exists()) || (!new File(tradePath).exists())) {
-/*  857 */           fileError = true;
-/*  858 */           break;
+/*  871 */         if ((!new File(mtmPath).exists()) || (!new File(tradePath).exists())) {
+/*  872 */           fileError = true;
+/*  873 */           break;
 /*      */         }
-/*  860 */         scripDateKey = scripDateKey + "|" + scripID;
+/*  875 */         scripDateKey = scripDateKey + "|" + scripID;
 /*      */       }
 /*      */       
 /*      */ 
-/*  864 */       if (!fileError) {}
+/*  879 */       if (!fileError) {}
 /*      */     }
 /*      */     
 /*      */ 
-/*  868 */     return scripDateKey;
+/*  883 */     return scripDateKey;
 /*      */   }
 /*      */   
 /*      */ 
@@ -889,46 +904,46 @@
 /*      */   public void generateMLOutput()
 /*      */     throws Exception
 /*      */   {
-/*  892 */     String destPath = this.mlPreProcessor.getDestPath();
+/*  907 */     String destPath = this.mlPreProcessor.getDestPath();
 /*      */     
 /*      */ 
-/*  895 */     if (!(this.mlParameter.getMlAlgorithm() instanceof MLAlgoRA))
+/*  910 */     if (!(this.mlParameter.getMlAlgorithm() instanceof MLAlgoRA))
 /*      */     {
 /*      */ 
 /*      */ 
 /*      */ 
-/*  900 */       if ((this.mlParameter.getMlAlgorithm() instanceof MLAlgoR))
+/*  915 */       if ((this.mlParameter.getMlAlgorithm() instanceof MLAlgoR))
 /*      */       {
-/*  902 */         boolean rolling = true;
+/*  917 */         boolean rolling = true;
 /*      */         
-/*  904 */         if (this.mlParameter.getLookbackType().equals(LookbackType.Hinged)) {
-/*  905 */           rolling = false;
+/*  919 */         if (this.mlParameter.getLookbackType().equals(LookbackType.Hinged)) {
+/*  920 */           rolling = false;
 /*      */         }
 /*      */         
-/*  908 */         boolean postProcess = this.machineLearning.getBacktest().backtestParameter.isGenerateOutputCheck();
-/*  909 */         boolean append = false;
+/*  923 */         boolean postProcess = this.machineLearning.getBacktest().backtestParameter.isGenerateOutputCheck();
+/*  924 */         boolean append = false;
 /*      */         
-/*  911 */         runMLThroughR(postProcess, this.btGlobal.loginParameter.getMainPath(), destPath, rolling, append);
+/*  926 */         runMLThroughR(postProcess, this.btGlobal.loginParameter.getMainPath(), destPath, rolling, append);
 /*      */ 
 /*      */ 
 /*      */       }
-/*  915 */       else if ((this.mlParameter.getMlAlgorithm() instanceof MLAlgoP)) {
-/*  916 */         boolean rolling = true;
+/*  930 */       else if ((this.mlParameter.getMlAlgorithm() instanceof MLAlgoP)) {
+/*  931 */         boolean rolling = true;
 /*      */         
-/*  918 */         if (this.mlParameter.getLookbackType().equals(LookbackType.Hinged)) {
-/*  919 */           rolling = false;
+/*  933 */         if (this.mlParameter.getLookbackType().equals(LookbackType.Hinged)) {
+/*  934 */           rolling = false;
 /*      */         }
 /*      */         
-/*  922 */         boolean postProcess = this.machineLearning.getBacktest().backtestParameter.isGenerateOutputCheck();
-/*  923 */         boolean append = false;
+/*  937 */         boolean postProcess = this.machineLearning.getBacktest().backtestParameter.isGenerateOutputCheck();
+/*  938 */         boolean append = false;
 /*      */         
-/*  925 */         runMLThroughPython(postProcess, this.btGlobal.loginParameter.getMainPath(), destPath, rolling, append);
+/*  940 */         runMLThroughPython(postProcess, this.btGlobal.loginParameter.getMainPath(), destPath, rolling, append);
 /*      */ 
 /*      */       }
 /*      */       else
 /*      */       {
 /*      */ 
-/*  931 */         throw new RuntimeException("Invalid Object Type mlAlgo not typeCasted");
+/*  946 */         throw new RuntimeException("Invalid Object Type mlAlgo not typeCasted");
 /*      */       }
 /*      */     }
 /*      */   }
@@ -937,184 +952,184 @@
 /*      */ 
 /*      */   private void runMLThroughR(boolean postProcess, String mainPath, String outputPath, boolean rolling, boolean append)
 /*      */   {
-/*  940 */     String[] newargs1 = { "--no-save" };
-/*  941 */     Rengine engine = Rengine.getMainEngine();
-/*  942 */     if (engine == null) {
-/*  943 */       engine = new Rengine(newargs1, false, null);
+/*  955 */     String[] newargs1 = { "--no-save" };
+/*  956 */     Rengine engine = Rengine.getMainEngine();
+/*  957 */     if (engine == null) {
+/*  958 */       engine = new Rengine(newargs1, false, null);
 /*      */     }
 /*      */     
-/*  946 */     String mainEval = "c(";
+/*  961 */     String mainEval = "c(";
 /*      */     
 /*      */ 
 /*      */ 
 /*      */ 
-/*  951 */     for (Map.Entry<String, MLAlgo> entry : this.mlPreProcessor.getAlgorithmMap().entrySet())
+/*  966 */     for (Map.Entry<String, MLAlgo> entry : this.mlPreProcessor.getAlgorithmMap().entrySet())
 /*      */     {
 /*      */ 
-/*  954 */       String mainDriverPath = mainPath + "/lib/ML Filter/MLFilterMainDriver.R";
+/*  969 */       String mainDriverPath = mainPath + "/lib/ML Filter/MLFilterMainDriver.R";
 /*      */       
 /*      */ 
-/*  957 */       MLAlgoR Mlr = (MLAlgoR)entry.getValue();
-/*  958 */       String packageLoc = Mlr.getModelPackage().replaceAll("\\.", "/");
-/*  959 */       String packagePath = mainPath + "/src/" + packageLoc;
-/*  960 */       String algoPath = packagePath + "/" + Mlr.getModelName();
-/*  961 */       String mlAlgoName = Mlr.getModelName().split("\\.")[0];
+/*  972 */       MLAlgoR Mlr = (MLAlgoR)entry.getValue();
+/*  973 */       String packageLoc = Mlr.getModelPackage().replaceAll("\\.", "/");
+/*  974 */       String packagePath = mainPath + "/src/" + packageLoc;
+/*  975 */       String algoPath = packagePath + "/" + Mlr.getModelName();
+/*  976 */       String mlAlgoName = Mlr.getModelName().split("\\.")[0];
 /*      */       
 /*      */ 
-/*  964 */       String src1 = "source(\\\"" + algoPath + "\\\")";
-/*  965 */       String src2 = "source(\\\"" + mainDriverPath + "\\\")";
+/*  979 */       String src1 = "source(\\\"" + algoPath + "\\\")";
+/*  980 */       String src2 = "source(\\\"" + mainDriverPath + "\\\")";
 /*      */       
-/*  967 */       System.out.println("source(\\\"" + algoPath + "\\\")");
-/*  968 */       System.out.println("source(\\\"" + mainDriverPath + "\\\")");
+/*  982 */       System.out.println("source(\\\"" + algoPath + "\\\")");
+/*  983 */       System.out.println("source(\\\"" + mainDriverPath + "\\\")");
 /*      */       
-/*  970 */       String rollingVal = rolling ? "TRUE" : "FALSE";
+/*  985 */       String rollingVal = rolling ? "TRUE" : "FALSE";
 /*      */       
-/*  972 */       String appendVal = append ? "TRUE" : "FALSE";
+/*  987 */       String appendVal = append ? "TRUE" : "FALSE";
 /*      */       
-/*  974 */       String inputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Input.csv" + "\\\"";
-/*  975 */       String outputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Output.csv" + "\\\"";
+/*  989 */       String inputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Input.csv" + "\\\"";
+/*  990 */       String outputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Output.csv" + "\\\"";
 /*      */       
-/*  977 */       String algoCommand = "MLFilterMainDriver(\\\"" + packagePath + "\\\"" + ", " + inputFile + ", " + 
-/*  978 */         outputFile + ", " + "\\\"" + (String)entry.getKey() + "\\\"" + "," + "\\\"" + outputPath + "\\\"" + ", " + 
-/*  979 */         this.mlParameter.getBlackoutPeriod() + ", " + this.mlParameter.getWindowPeriod() + ", " + 
-/*  980 */         this.mlParameter.getUpdatePeriod() + ", " + rollingVal + ", " + appendVal + ", " + mlAlgoName;
-/*  981 */       ArrayList<String[]> paramList = Mlr.getParameterList();
-/*  982 */       for (String[] param : paramList) {
-/*  983 */         algoCommand = algoCommand + "," + param[1];
+/*  992 */       String algoCommand = "MLFilterMainDriver(\\\"" + packagePath + "\\\"" + ", " + inputFile + ", " + 
+/*  993 */         outputFile + ", " + "\\\"" + (String)entry.getKey() + "\\\"" + "," + "\\\"" + outputPath + "\\\"" + ", " + 
+/*  994 */         this.mlParameter.getBlackoutPeriod() + ", " + this.mlParameter.getWindowPeriod() + ", " + 
+/*  995 */         this.mlParameter.getUpdatePeriod() + ", " + rollingVal + ", " + appendVal + ", " + mlAlgoName;
+/*  996 */       ArrayList<String[]> paramList = Mlr.getParameterList();
+/*  997 */       for (String[] param : paramList) {
+/*  998 */         algoCommand = algoCommand + "," + param[1];
 /*      */       }
-/*  985 */       algoCommand = algoCommand + ")";
+/* 1000 */       algoCommand = algoCommand + ")";
 /*      */       
-/*  987 */       System.out.println(algoCommand);
+/* 1002 */       System.out.println(algoCommand);
 /*      */       
-/*  989 */       System.out.println("\n");
+/* 1004 */       System.out.println("\n");
 /*      */       
 /*      */ 
-/*  992 */       if (mainEval.equals("c(")) {
-/*  993 */         mainEval = mainEval + "\"" + src1 + "\\n" + src2 + "\\n" + algoCommand + "\"";
+/* 1007 */       if (mainEval.equals("c(")) {
+/* 1008 */         mainEval = mainEval + "\"" + src1 + "\\n" + src2 + "\\n" + algoCommand + "\"";
 /*      */       }
 /*      */       else {
-/*  996 */         mainEval = mainEval + "," + "\"" + src1 + "\\n" + src2 + "\\n" + algoCommand + "\"";
+/* 1011 */         mainEval = mainEval + "," + "\"" + src1 + "\\n" + src2 + "\\n" + algoCommand + "\"";
 /*      */       }
 /*      */     }
 /*      */     
 /*      */ 
-/* 1001 */     String mlMainPath = mainPath + "/lib/ML Filter/MainDriver.R";
-/* 1002 */     String src = "source(\"" + mlMainPath + "\")";
-/* 1003 */     mainEval = mainEval + ")";
-/* 1004 */     String finalCommand = "MainDriver(\"" + outputPath + "\"" + "," + mainEval + ")";
+/* 1016 */     String mlMainPath = mainPath + "/lib/ML Filter/MainDriver.R";
+/* 1017 */     String src = "source(\"" + mlMainPath + "\")";
+/* 1018 */     mainEval = mainEval + ")";
+/* 1019 */     String finalCommand = "MainDriver(\"" + outputPath + "\"" + "," + mainEval + ")";
 /*      */     
-/* 1006 */     System.out.println(src);
-/* 1007 */     System.out.println(finalCommand);
-/* 1008 */     engine.eval(src);
-/* 1009 */     engine.eval(finalCommand);
-/* 1010 */     engine.end();
+/* 1021 */     System.out.println(src);
+/* 1022 */     System.out.println(finalCommand);
+/* 1023 */     engine.eval(src);
+/* 1024 */     engine.eval(finalCommand);
+/* 1025 */     engine.end();
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   private void runMLThroughPython(boolean postProcess, String mainPath, String outputPath, boolean rolling, boolean append)
 /*      */   {
-/* 1016 */     String mainDriverPath = mainPath + "/lib/ML Filter";
+/* 1031 */     String mainDriverPath = mainPath + "/lib/ML Filter";
 /*      */     
-/* 1018 */     String mainEval = "python \"" + mainDriverPath + "/MainDriver.py" + "\"";
+/* 1033 */     String mainEval = "python \"" + mainDriverPath + "/MainDriver.py" + "\"";
 /*      */     
 /*      */ 
-/* 1021 */     for (Map.Entry<String, MLAlgo> entry : this.mlPreProcessor.getAlgorithmMap().entrySet())
+/* 1036 */     for (Map.Entry<String, MLAlgo> entry : this.mlPreProcessor.getAlgorithmMap().entrySet())
 /*      */     {
 /*      */ 
-/* 1024 */       String rollingVal = rolling ? "1" : "0";
+/* 1039 */       String rollingVal = rolling ? "1" : "0";
 /*      */       
-/* 1026 */       String appendVal = append ? "1" : "0";
-/*      */       
-/*      */ 
-/* 1029 */       MLAlgo MlAlgo = (MLAlgo)entry.getValue();
+/* 1041 */       String appendVal = append ? "1" : "0";
 /*      */       
 /*      */ 
-/*      */ 
-/*      */ 
-/* 1034 */       String mlAlgoName = MlAlgo.getModelName().split("\\.")[0];
+/* 1044 */       MLAlgo MlAlgo = (MLAlgo)entry.getValue();
 /*      */       
 /*      */ 
 /*      */ 
 /*      */ 
-/*      */ 
-/* 1040 */       String inputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Input.csv" + "\\\"";
-/* 1041 */       String outputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Output.csv" + "\\\"";
+/* 1049 */       String mlAlgoName = MlAlgo.getModelName().split("\\.")[0];
 /*      */       
-/* 1043 */       String algoCommand = "python \\\"" + mainDriverPath + "/MLFilterMainDriver.py" + "\\\"" + " \\\"" + mainPath + 
-/* 1044 */         "\\\" " + inputFile + " " + outputFile + " " + "\\\"" + (String)entry.getKey() + "\\\"" + " " + "\\\"" + 
-/* 1045 */         outputPath + "\\\"" + " " + this.mlParameter.getBlackoutPeriod().intValue() + " " + this.mlParameter.getWindowPeriod() + 
-/* 1046 */         " " + this.mlParameter.getUpdatePeriod() + " " + rollingVal + " " + appendVal + " " + "\\\"" + 
-/* 1047 */         mlAlgoName + "\\\"";
-/* 1048 */       mainEval = mainEval + " \"" + algoCommand + "\"";
+/*      */ 
+/*      */ 
+/*      */ 
+/*      */ 
+/* 1055 */       String inputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Input.csv" + "\\\"";
+/* 1056 */       String outputFile = "\\\"" + outputPath + "/ML/" + (String)entry.getKey() + " Output.csv" + "\\\"";
+/*      */       
+/* 1058 */       String algoCommand = "python \\\"" + mainDriverPath + "/MLFilterMainDriver.py" + "\\\"" + " \\\"" + mainPath + 
+/* 1059 */         "\\\" " + inputFile + " " + outputFile + " " + "\\\"" + (String)entry.getKey() + "\\\"" + " " + "\\\"" + 
+/* 1060 */         outputPath + "\\\"" + " " + this.mlParameter.getBlackoutPeriod().intValue() + " " + this.mlParameter.getWindowPeriod() + 
+/* 1061 */         " " + this.mlParameter.getUpdatePeriod() + " " + rollingVal + " " + appendVal + " " + "\\\"" + 
+/* 1062 */         mlAlgoName + "\\\"";
+/* 1063 */       mainEval = mainEval + " \"" + algoCommand + "\"";
 /*      */     }
 /*      */     
-/* 1051 */     System.out.println(mainEval);
+/* 1066 */     System.out.println(mainEval);
 /*      */   }
 /*      */   
 /*      */   public TreeMap<Long, HashMap<String, HashMap<String, Double>>> readCorrelFromFile(String destPath)
 /*      */     throws IOException
 /*      */   {
-/* 1057 */     String fileName = destPath + "/ML/DailyCorrelLog.csv";
+/* 1072 */     String fileName = destPath + "/ML/DailyCorrelLog.csv";
 /*      */     
-/* 1059 */     TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals = new TreeMap();
+/* 1074 */     TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals = new TreeMap();
 /*      */     
-/* 1061 */     CSVReader reader = new CSVReader(fileName, ',', 0);
+/* 1076 */     CSVReader reader = new CSVReader(fileName, ',', 0);
 /*      */     
 /*      */ 
 /*      */ 
-/* 1065 */     String[] header1 = reader.getLine();
-/* 1066 */     String[] header2 = reader.getLine();
+/* 1080 */     String[] header1 = reader.getLine();
+/* 1081 */     String[] header2 = reader.getLine();
 /*      */     String[] curLine;
-/* 1068 */     while ((curLine = reader.getLine()) != null) {
+/* 1083 */     while ((curLine = reader.getLine()) != null) {
 /*      */       String[] curLine;
-/* 1070 */       Long date = Long.valueOf(Long.parseLong(curLine[0]));
-/* 1071 */       HashMap<String, HashMap<String, Double>> correlMap = new HashMap();
+/* 1085 */       Long date = Long.valueOf(Long.parseLong(curLine[0]));
+/* 1086 */       HashMap<String, HashMap<String, Double>> correlMap = new HashMap();
 /*      */       
 /*      */ 
-/* 1074 */       for (int i = 1; i < curLine.length; i++)
+/* 1089 */       for (int i = 1; i < curLine.length; i++)
 /*      */       {
-/* 1076 */         String scrip1 = header1[i];
-/* 1077 */         String scrip2 = header2[i];
-/* 1078 */         Double value = Double.valueOf(Double.parseDouble(curLine[i]));
+/* 1091 */         String scrip1 = header1[i];
+/* 1092 */         String scrip2 = header2[i];
+/* 1093 */         Double value = Double.valueOf(Double.parseDouble(curLine[i]));
 /*      */         
-/* 1080 */         HashMap<String, Double> curMap = (HashMap)correlMap.get(scrip1);
-/* 1081 */         if (curMap == null) {
-/* 1082 */           curMap = new HashMap();
-/* 1083 */           curMap.put(scrip2, value);
-/* 1084 */           correlMap.put(scrip1, curMap);
+/* 1095 */         HashMap<String, Double> curMap = (HashMap)correlMap.get(scrip1);
+/* 1096 */         if (curMap == null) {
+/* 1097 */           curMap = new HashMap();
+/* 1098 */           curMap.put(scrip2, value);
+/* 1099 */           correlMap.put(scrip1, curMap);
 /*      */         } else {
-/* 1086 */           curMap.put(scrip2, value);
-/* 1087 */           correlMap.put(scrip1, curMap);
+/* 1101 */           curMap.put(scrip2, value);
+/* 1102 */           correlMap.put(scrip1, curMap);
 /*      */         }
 /*      */       }
 /*      */       
 /*      */ 
-/* 1092 */       correlVals.put(date, correlMap);
+/* 1107 */       correlVals.put(date, correlMap);
 /*      */     }
 /*      */     
-/* 1095 */     reader.close();
+/* 1110 */     reader.close();
 /*      */     
-/* 1097 */     return correlVals;
+/* 1112 */     return correlVals;
 /*      */   }
 /*      */   
 /*      */ 
 /*      */   public HashMap<String, DailyDataReader> initDailyreader(ArrayList<String> scripList, String dataPath, Long dailyStartDate)
 /*      */     throws Exception
 /*      */   {
-/* 1104 */     HashMap<String, DailyDataReader> dailyReaderCollection = new HashMap();
+/* 1119 */     HashMap<String, DailyDataReader> dailyReaderCollection = new HashMap();
 /*      */     
-/* 1106 */     for (String scripName : scripList) {
-/* 1107 */       Scrip scrip = new Scrip(scripName);
-/* 1108 */       String scripListName = scripName.replace(' ', '$');
+/* 1121 */     for (String scripName : scripList) {
+/* 1122 */       Scrip scrip = new Scrip(scripName);
+/* 1123 */       String scripListName = scripName.replace(' ', '$');
 /*      */       try {
-/* 1110 */         dailyReaderCollection.put(scripName, new DailyDataReader(dailyStartDate, this.btGlobal, this.backtest, scrip, scripListName));
+/* 1125 */         dailyReaderCollection.put(scripName, new DailyDataReader(dailyStartDate, this.btGlobal, this.backtest, scrip, scripListName));
 /*      */       } catch (IOException e) {
-/* 1112 */         System.out.println("Error in reading Daily file for " + scripName);
-/* 1113 */         throw new Exception();
+/* 1127 */         System.out.println("Error in reading Daily file for " + scripName);
+/* 1128 */         throw new Exception();
 /*      */       }
 /*      */     }
 /*      */     
-/* 1117 */     return dailyReaderCollection;
+/* 1132 */     return dailyReaderCollection;
 /*      */   }
 /*      */ }
 

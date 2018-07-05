@@ -78,189 +78,185 @@
 /*  78 */       this.lookbackType.getVal() + "$" + this.segmentCount + "$" + 
 /*  79 */       this.overallCount + "$" + this.segmentCorrelThreshold + "$" + 
 /*  80 */       this.overallCorrelThreshold + "$" + this.correlPeriod + "$" + 
-/*  81 */       getFactorParameters();
-/*  82 */     return parameterKey;
+/*  81 */       this.bias + "$" + 
+/*  82 */       getFactorParameters();
+/*  83 */     return parameterKey;
 /*     */   }
 /*     */   
 /*     */   public String getMLParametersAsOutputKey()
 /*     */   {
-/*  87 */     String parameterKey = this.mlAlgorithm.getModelName() + "$" + 
-/*  88 */       this.mlAlgoTimeStamp + "$" + this.windowPeriod + "$" + this.updatePeriod + 
-/*  89 */       "$" + this.blackoutPeriod + "$" + this.modelMergeType.getVal() + "$" + 
-/*  90 */       this.selectionMergeType.getVal() + "$" + 
-/*  91 */       this.lookbackType.getVal() + "$" + this.correlPeriod + "$" + 
-/*  92 */       getFactorParameters();
-/*  93 */     return parameterKey;
+/*  88 */     String parameterKey = this.mlAlgorithm.getModelName() + "$" + 
+/*  89 */       this.mlAlgoTimeStamp + "$" + this.windowPeriod + "$" + this.updatePeriod + 
+/*  90 */       "$" + this.blackoutPeriod + "$" + this.modelMergeType.getVal() + "$" + 
+/*  91 */       this.selectionMergeType.getVal() + "$" + 
+/*  92 */       this.lookbackType.getVal() + "$" + this.correlPeriod + "$" + 
+/*  93 */       this.bias + "$" + 
+/*  94 */       getFactorParameters();
+/*  95 */     return parameterKey;
+/*     */   }
+/*     */   
+/*     */   public String getMLParametersAsInputKey() {
+/*  99 */     String parameterKey = this.modelMergeType.getVal() + "$" + 
+/* 100 */       getFactorParameters();
+/* 101 */     return parameterKey;
 /*     */   }
 /*     */   
 /*     */ 
 /*     */ 
 /*     */   public String getFactorParameters()
 /*     */   {
-/* 100 */     TreeSet<String> factorSet = new TreeSet(getFactorList());
+/* 108 */     TreeSet<String> factorSet = new TreeSet(getFactorList());
 /*     */     
-/* 102 */     String factorParams = "";
-/* 103 */     for (String factor : factorSet) {
-/* 104 */       if (factorParams.equals("")) {
-/* 105 */         factorParams = factor;
+/* 110 */     String factorParams = "";
+/* 111 */     for (String factor : factorSet) {
+/* 112 */       if (factorParams.equals("")) {
+/* 113 */         factorParams = factor;
 /*     */       } else {
-/* 107 */         factorParams = factorParams + "$" + factor;
+/* 115 */         factorParams = factorParams + "$" + factor;
 /*     */       }
 /*     */     }
-/* 110 */     return factorParams;
+/* 118 */     return factorParams;
 /*     */   }
 /*     */   
 /*     */   public Boolean getBias()
 /*     */   {
-/* 115 */     return this.bias;
+/* 123 */     return this.bias;
 /*     */   }
 /*     */   
 /*     */   public Integer getWindowPeriod() {
-/* 119 */     return this.windowPeriod;
+/* 127 */     return this.windowPeriod;
 /*     */   }
 /*     */   
 /*     */   public void setBias(Boolean bias) {
-/* 123 */     this.bias = bias;
+/* 131 */     this.bias = bias;
 /*     */   }
 /*     */   
 /*     */   public void setWindowPeriod(Integer windowPeriod) {
-/* 127 */     this.windowPeriod = windowPeriod;
+/* 135 */     this.windowPeriod = windowPeriod;
 /*     */   }
 /*     */   
 /*     */   public Integer getUpdatePeriod() {
-/* 131 */     return this.updatePeriod;
+/* 139 */     return this.updatePeriod;
 /*     */   }
 /*     */   
 /*     */   public void setUpdatePeriod(Integer updatePeriod) {
-/* 135 */     this.updatePeriod = updatePeriod;
+/* 143 */     this.updatePeriod = updatePeriod;
 /*     */   }
 /*     */   
 /*     */   public Integer getBlackoutPeriod() {
-/* 139 */     return this.blackoutPeriod;
+/* 147 */     return this.blackoutPeriod;
 /*     */   }
 /*     */   
 /*     */   public void setBlackoutPeriod(Integer blackoutPeriod) {
-/* 143 */     this.blackoutPeriod = blackoutPeriod;
+/* 151 */     this.blackoutPeriod = blackoutPeriod;
 /*     */   }
 /*     */   
 /*     */   public LookbackType getLookbackType() {
-/* 147 */     return this.lookbackType;
+/* 155 */     return this.lookbackType;
 /*     */   }
 /*     */   
 /*     */   public void setLookbackType(LookbackType lookbackType) {
-/* 151 */     this.lookbackType = lookbackType;
+/* 159 */     this.lookbackType = lookbackType;
 /*     */   }
 /*     */   
 /*     */   public MergeType getModelMergeType()
 /*     */   {
-/* 156 */     return this.modelMergeType;
+/* 164 */     return this.modelMergeType;
 /*     */   }
 /*     */   
 /*     */   public void setModelMergeType(MergeType modelMergeType) {
-/* 160 */     this.modelMergeType = modelMergeType;
+/* 168 */     this.modelMergeType = modelMergeType;
 /*     */   }
 /*     */   
 /*     */   public MergeType getSelectionMergeType() {
-/* 164 */     return this.selectionMergeType;
+/* 172 */     return this.selectionMergeType;
 /*     */   }
 /*     */   
 /*     */   public void setSelectionMergeType(MergeType postModelSelectionMergeType) {
-/* 168 */     this.selectionMergeType = postModelSelectionMergeType;
+/* 176 */     this.selectionMergeType = postModelSelectionMergeType;
 /*     */   }
 /*     */   
 /*     */   public Integer getSegmentCount() {
-/* 172 */     return this.segmentCount;
+/* 180 */     return this.segmentCount;
 /*     */   }
 /*     */   
 /*     */   public void setSegmentCount(Integer segmentCount) {
-/* 176 */     this.segmentCount = segmentCount;
+/* 184 */     this.segmentCount = segmentCount;
 /*     */   }
 /*     */   
 /*     */   public Integer getOverallCount() {
-/* 180 */     return this.overallCount;
+/* 188 */     return this.overallCount;
 /*     */   }
 /*     */   
 /*     */   public void setOverallCount(Integer overallCount) {
-/* 184 */     this.overallCount = overallCount;
+/* 192 */     this.overallCount = overallCount;
 /*     */   }
 /*     */   
 /*     */   public Double getSegmentCorrelThreshold() {
-/* 188 */     return this.segmentCorrelThreshold;
+/* 196 */     return this.segmentCorrelThreshold;
 /*     */   }
 /*     */   
 /*     */   public void setSegmentCorrelThreshold(Double segmentCorrelThreshold) {
-/* 192 */     this.segmentCorrelThreshold = segmentCorrelThreshold;
+/* 200 */     this.segmentCorrelThreshold = segmentCorrelThreshold;
 /*     */   }
 /*     */   
 /*     */   public Double getOverallCorrelThreshold() {
-/* 196 */     return this.overallCorrelThreshold;
+/* 204 */     return this.overallCorrelThreshold;
 /*     */   }
 /*     */   
 /*     */   public void setOverallCorrelThreshold(Double overallCorrelThreshold) {
-/* 200 */     this.overallCorrelThreshold = overallCorrelThreshold;
+/* 208 */     this.overallCorrelThreshold = overallCorrelThreshold;
 /*     */   }
 /*     */   
 /*     */   public Integer getCorrelPeriod() {
-/* 204 */     return this.correlPeriod;
+/* 212 */     return this.correlPeriod;
 /*     */   }
 /*     */   
 /*     */   public void setCorrelPeriod(Integer correlPeriod) {
-/* 208 */     this.correlPeriod = correlPeriod;
+/* 216 */     this.correlPeriod = correlPeriod;
 /*     */   }
 /*     */   
 /*     */   public ArrayList<String> getFactorList() {
-/* 212 */     return this.factorList;
+/* 220 */     return this.factorList;
 /*     */   }
 /*     */   
 /*     */   public void setFactorList(ArrayList<String> factorList) {
-/* 216 */     this.factorList = factorList;
+/* 224 */     this.factorList = factorList;
 /*     */   }
 /*     */   
 /*     */   public VarList getVarList() {
-/* 220 */     return this.varList;
+/* 228 */     return this.varList;
 /*     */   }
 /*     */   
 /*     */   public void setVarList(VarList varList)
 /*     */   {
-/* 225 */     this.varList = varList;
+/* 233 */     this.varList = varList;
 /*     */   }
 /*     */   
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */   public MLAlgo getMlAlgorithm()
-/*     */   {
-/* 240 */     return this.mlAlgorithm;
+/*     */   public MLAlgo getMlAlgorithm() {
+/* 237 */     return this.mlAlgorithm;
 /*     */   }
 /*     */   
 /*     */ 
 /*     */   public void setMlAlgorithm(MLAlgo mlAlgorithm, String mainPath)
 /*     */   {
-/* 246 */     String packageLocR = mlAlgorithm.getModelPackage().replaceAll("\\.", 
-/* 247 */       "/");
-/* 248 */     String packagePathR = mainPath + "/src/" + packageLocR;
-/* 249 */     String algoPathTS = packagePathR + "/" + mlAlgorithm.getModelName();
-/* 250 */     File stratFile = new File(algoPathTS);
-/* 251 */     SimpleDateFormat stratFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-/* 252 */     String mlAlgoTimeStamp = stratFormat.format(Long.valueOf(stratFile.lastModified()));
-/* 253 */     setMlAlgoTimeStamp(mlAlgoTimeStamp);
+/* 243 */     String packageLocR = mlAlgorithm.getModelPackage().replaceAll("\\.", "/");
+/* 244 */     String packagePathR = mainPath + "/src/" + packageLocR;
+/* 245 */     String algoPathTS = packagePathR + "/" + mlAlgorithm.getModelName();
+/* 246 */     File stratFile = new File(algoPathTS);
+/* 247 */     SimpleDateFormat stratFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+/* 248 */     String mlAlgoTimeStamp = stratFormat.format(Long.valueOf(stratFile.lastModified()));
+/* 249 */     setMlAlgoTimeStamp(mlAlgoTimeStamp);
 /*     */     
-/* 255 */     this.mlAlgorithm = mlAlgorithm;
+/* 251 */     this.mlAlgorithm = mlAlgorithm;
 /*     */   }
 /*     */   
 /*     */   public String getMlAlgoTimeStamp() {
-/* 259 */     return this.mlAlgoTimeStamp;
+/* 255 */     return this.mlAlgoTimeStamp;
 /*     */   }
 /*     */   
 /*     */   public void setMlAlgoTimeStamp(String mlAlgoTimeStamp) {
-/* 263 */     this.mlAlgoTimeStamp = mlAlgoTimeStamp;
+/* 259 */     this.mlAlgoTimeStamp = mlAlgoTimeStamp;
 /*     */   }
 /*     */ }
 

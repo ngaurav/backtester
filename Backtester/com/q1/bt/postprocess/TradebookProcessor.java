@@ -301,14 +301,17 @@
 /* 301 */       Integer tradeSide = (Integer)this.tradeSides.get(i);
 /*     */       
 /* 303 */       Long startDate = Long.valueOf(Long.parseLong((String)this.startdTs.get(i)) / 1000000L);
-/* 304 */       tradeStartDateTradeSideMap.put(startDate, tradeSide);
+/* 304 */       if (((String)this.startdTs.get(i)).equals(this.enddTs.get(i))) {
+/* 305 */         tradeStartDateTradeSideMap.put(startDate, Integer.valueOf(0));
+/*     */       } else {
+/* 307 */         tradeStartDateTradeSideMap.put(startDate, tradeSide);
+/*     */       }
 /*     */     }
-/*     */     
-/* 307 */     return tradeStartDateTradeSideMap;
+/* 310 */     return tradeStartDateTradeSideMap;
 /*     */   }
 /*     */   
 /*     */   public TreeMap<Long, ArrayList<Integer>> getTradeDateIndexMap() {
-/* 311 */     return this.tradeDateIndexMap;
+/* 314 */     return this.tradeDateIndexMap;
 /*     */   }
 /*     */ }
 

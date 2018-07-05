@@ -5,6 +5,7 @@
 /*     */ import com.q1.bt.machineLearning.driver.driverHelperClasses.BinaryGenerator;
 /*     */ import com.q1.bt.machineLearning.driver.driverHelperClasses.CorrelLogWriter;
 /*     */ import com.q1.bt.machineLearning.driver.driverHelperClasses.OutputProcessor;
+/*     */ import com.q1.bt.machineLearning.driver.driverHelperClasses.ParameterWriter;
 /*     */ import com.q1.bt.machineLearning.utility.DailyDataReader;
 /*     */ import com.q1.bt.machineLearning.utility.MLFinalDecisionWriter;
 /*     */ import com.q1.bt.machineLearning.utility.TradeBookToOrderBookGenerator;
@@ -37,18 +38,18 @@
 /*     */   TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals;
 /*     */   CSVWriter mlLogWriter;
 /*     */   CorrelLogWriter correlLogWriter;
-/*  40 */   HashMap<String, MLAlgo> algorithmMap = new HashMap();
+/*  41 */   HashMap<String, MLAlgo> algorithmMap = new HashMap();
 /*     */   
 /*     */   HashMap<String, TreeMap<Long, Long>> tradeStartEndMaps;
 /*     */   
 /*     */   HashMap<String, TreeMap<Long, Integer>> tradeStartDateTradeSideMap;
 /*     */   
 /*     */   String mlPath;
-/*  47 */   Long rwriteTS = Long.valueOf(0L);
-/*  48 */   Boolean rcompleteReading = Boolean.valueOf(false);
+/*  48 */   Long rwriteTS = Long.valueOf(0L);
+/*  49 */   Boolean rcompleteReading = Boolean.valueOf(false);
 /*     */   
-/*  50 */   HashMap<Long, String> tsTradedSelectedScripsMap = new HashMap();
-/*  51 */   HashMap<Long, String> tsTradedNotSelectedScripsMap = new HashMap();
+/*  51 */   HashMap<Long, String> tsTradedSelectedScripsMap = new HashMap();
+/*  52 */   HashMap<Long, String> tsTradedNotSelectedScripsMap = new HashMap();
 /*     */   
 /*     */ 
 /*     */ 
@@ -85,151 +86,149 @@
 /*     */ 
 /*     */   public MLPostProcessor(String sourcePath, String destPath, HashMap<String, ArrayList<Asset>> modelSegmentWiseAssetUniverseMap, HashMap<String, ArrayList<Asset>> postModelSelectionSegmentWiseAssetUniverseMap, ArrayList<String> scripUniverse, String dataPath, Backtest backtest, MachineLearning machineLearning, ArrayList<Long> dateList, HashMap<String, DailyDataReader> dailyReaderCollection, TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals, HashMap<String, MLAlgo> algorithmMap, HashMap<String, TreeMap<Long, Long>> tradeStartEndMaps, HashMap<String, TreeMap<Long, Integer>> tradeStartDateTradeSideMap, TreeMap<Long, HashMap<String, Double>> tradeMTMMat, String algoLastModifiedTimeStamp, boolean postProcess, boolean bias)
 /*     */   {
-/*  88 */     this.backtest = backtest;
+/*  89 */     this.backtest = backtest;
 /*     */     
 /*     */ 
-/*  91 */     this.mlParameter = machineLearning.getMlParameter();
+/*  92 */     this.mlParameter = machineLearning.getMlParameter();
 /*     */     
-/*  93 */     this.dailyReaderCollection = dailyReaderCollection;
-/*  94 */     this.correlVals = correlVals;
-/*  95 */     this.algorithmMap = algorithmMap;
-/*  96 */     this.tradeStartEndMaps = tradeStartEndMaps;
-/*  97 */     this.tradeStartDateTradeSideMap = tradeStartDateTradeSideMap;
-/*  98 */     this.tradeMTMMat = tradeMTMMat;
-/*  99 */     this.modelSegmentWiseAssetUniverseMap = modelSegmentWiseAssetUniverseMap;
-/* 100 */     this.postModelSelectionSegmentWiseAssetUniverseMap = postModelSelectionSegmentWiseAssetUniverseMap;
-/* 101 */     this.scripUniverse = scripUniverse;
-/* 102 */     this.bias = bias;
+/*  94 */     this.dailyReaderCollection = dailyReaderCollection;
+/*  95 */     this.correlVals = correlVals;
+/*  96 */     this.algorithmMap = algorithmMap;
+/*  97 */     this.tradeStartEndMaps = tradeStartEndMaps;
+/*  98 */     this.tradeStartDateTradeSideMap = tradeStartDateTradeSideMap;
+/*  99 */     this.tradeMTMMat = tradeMTMMat;
+/* 100 */     this.modelSegmentWiseAssetUniverseMap = modelSegmentWiseAssetUniverseMap;
+/* 101 */     this.postModelSelectionSegmentWiseAssetUniverseMap = postModelSelectionSegmentWiseAssetUniverseMap;
+/* 102 */     this.scripUniverse = scripUniverse;
+/* 103 */     this.bias = bias;
 /*     */     
-/* 104 */     this.mlPath = (destPath + "/ML");
+/* 105 */     this.mlPath = (destPath + "/ML");
 /*     */     try
 /*     */     {
-/* 107 */       initMLLogWriter();
-/* 108 */       this.mlFinalDecisionWriter = new MLFinalDecisionWriter(this.mlPath);
+/* 108 */       initMLLogWriter();
+/* 109 */       this.mlFinalDecisionWriter = new MLFinalDecisionWriter(this.mlPath);
 /*     */     } catch (Exception e) {
-/* 110 */       e.printStackTrace();
+/* 111 */       e.printStackTrace();
 /*     */     }
 /*     */   }
 /*     */   
-/*     */   public void readOutput(String sourcePath, String destPath, boolean postProcess, ArrayList<Long> dateList) throws IOException
+/*     */   public void readOutput(String sourcePath, String destPath, boolean postProcess, ArrayList<Long> dateList) throws Exception
 /*     */   {
-/* 116 */     HashMap<String, Double> modelOutput = new HashMap();
-/* 117 */     HashMap<String, Boolean> result = new HashMap();
-/* 118 */     HashMap<String, CSVReader> outputReaderCollector = new HashMap();
+/* 117 */     HashMap<String, Double> modelOutput = new HashMap();
+/* 118 */     HashMap<String, Boolean> result = new HashMap();
+/* 119 */     HashMap<String, CSVReader> outputReaderCollector = new HashMap();
 /*     */     
-/* 120 */     if (this.correlVals == null) {
-/* 121 */       this.correlVals = correlRead(destPath);
+/* 121 */     if (this.correlVals == null) {
+/* 122 */       this.correlVals = correlRead(destPath);
 /*     */     }
 /*     */     else {
-/* 124 */       this.correlLogWriter = new CorrelLogWriter(this.mlPath);
-/* 125 */       this.correlLogWriter.writeCorrelLog(this.correlVals, this.scripUniverse);
+/* 125 */       this.correlLogWriter = new CorrelLogWriter(this.mlPath);
+/* 126 */       this.correlLogWriter.writeCorrelLog(this.correlVals, this.scripUniverse);
 /*     */     }
 /*     */     
-/* 128 */     this.rcompleteReading = Boolean.valueOf(false);
+/* 129 */     this.rcompleteReading = Boolean.valueOf(false);
 /*     */     
-/* 130 */     OutputProcessor outputProcessor = new OutputProcessor();
+/* 131 */     OutputProcessor outputProcessor = new OutputProcessor();
 /*     */     
-/* 132 */     for (String assetPart : this.algorithmMap.keySet()) {
-/* 133 */       String fileName = destPath + "/ML" + "/" + assetPart + 
-/* 134 */         " Output.csv";
+/* 133 */     for (String assetPart : this.algorithmMap.keySet()) {
+/* 134 */       String fileName = destPath + "/ML" + "/" + assetPart + 
+/* 135 */         " Output.csv";
 /*     */       try {
-/* 136 */         System.out.println("processing " + fileName);
-/* 137 */         CSVReader outputReader = new CSVReader(fileName, ',', 0);
-/* 138 */         outputReaderCollector.put(assetPart, outputReader);
+/* 137 */         System.out.println("processing " + fileName);
+/* 138 */         CSVReader outputReader = new CSVReader(fileName, ',', 0);
+/* 139 */         outputReaderCollector.put(assetPart, outputReader);
 /*     */       } catch (IOException e) {
-/* 140 */         System.out.println(fileName + " not found");
+/* 141 */         System.out.println(fileName + " not found");
 /*     */       }
 /*     */     }
 /*     */     
-/* 144 */     BinaryGenerator binaryGenerator = new BinaryGenerator(
-/* 145 */       this.tsTradedSelectedScripsMap, this.tsTradedNotSelectedScripsMap, 
-/* 146 */       this.correlVals, this.tradeStartEndMaps, this.tradeStartDateTradeSideMap, this.bias);
-/* 147 */     boolean firstCall = true;
+/* 145 */     BinaryGenerator binaryGenerator = new BinaryGenerator(
+/* 146 */       this.tsTradedSelectedScripsMap, this.tsTradedNotSelectedScripsMap, 
+/* 147 */       this.correlVals, this.tradeStartEndMaps, this.tradeStartDateTradeSideMap, this.bias);
+/* 148 */     boolean firstCall = true;
 /*     */     
-/* 149 */     while (!this.rcompleteReading.booleanValue()) {
-/* 150 */       modelOutput = outputProcessor.processOutput(outputReaderCollector);
-/* 151 */       this.rcompleteReading = Boolean.valueOf(outputProcessor.isRcompleteReading());
-/* 152 */       this.rwriteTS = outputProcessor.getRwriteTS();
+/* 150 */     while (!this.rcompleteReading.booleanValue()) {
+/* 151 */       modelOutput = outputProcessor.processOutput(outputReaderCollector);
+/* 152 */       this.rcompleteReading = Boolean.valueOf(outputProcessor.isRcompleteReading());
+/* 153 */       this.rwriteTS = outputProcessor.getRwriteTS();
 /*     */       
 /*     */ 
-/* 155 */       result = binaryGenerator.generateBinary(modelOutput, 
-/* 156 */         this.mlParameter.getSegmentCount().intValue(), 
-/* 157 */         this.mlParameter.getOverallCount().intValue(), 
-/* 158 */         this.mlParameter.getSegmentCorrelThreshold().doubleValue(), 
-/* 159 */         this.mlParameter.getOverallCorrelThreshold().doubleValue(), this.rwriteTS.longValue(), 
-/* 160 */         dateList, this.postModelSelectionSegmentWiseAssetUniverseMap, firstCall);
-/* 161 */       firstCall = false;
+/* 156 */       result = binaryGenerator.generateBinary(modelOutput, 
+/* 157 */         this.mlParameter.getSegmentCount().intValue(), 
+/* 158 */         this.mlParameter.getOverallCount().intValue(), 
+/* 159 */         this.mlParameter.getSegmentCorrelThreshold().doubleValue(), 
+/* 160 */         this.mlParameter.getOverallCorrelThreshold().doubleValue(), this.rwriteTS.longValue(), 
+/* 161 */         dateList, this.postModelSelectionSegmentWiseAssetUniverseMap, firstCall);
+/* 162 */       firstCall = false;
 /*     */       
 /*     */ 
 /*     */       try
 /*     */       {
-/* 166 */         this.mlFinalDecisionWriter.writeAndSaveInMemoryMLDecisions(result, this.rwriteTS);
+/* 167 */         this.mlFinalDecisionWriter.writeAndSaveInMemoryMLDecisions(result, this.rwriteTS);
+/* 168 */         HashMap<String, Double> mtmMap = (HashMap)this.tradeMTMMat.get(this.rwriteTS);
 /*     */         
-/*     */ 
-/*     */ 
-/*     */ 
-/* 171 */         HashMap<String, Double> mtmMap = (HashMap)this.tradeMTMMat.get(this.rwriteTS);
-/*     */         
-/* 173 */         writeMLTradeLog(this.rwriteTS, result, mtmMap, modelOutput);
+/* 170 */         writeMLTradeLog(this.rwriteTS, result, mtmMap, modelOutput);
 /*     */       }
 /*     */       catch (Exception e) {
-/* 176 */         System.out.println("ML Error in writing Output files for " + this.rwriteTS);
-/* 177 */         e.printStackTrace();
+/* 173 */         System.out.println("ML Error in writing Output files for " + this.rwriteTS);
+/* 174 */         e.printStackTrace();
 /*     */       }
 /*     */     }
 /*     */     
 /*     */ 
-/* 182 */     this.mlFinalDecisionWriter.closeWriter();
-/* 183 */     HashMap<String, TreeMap<Long, Boolean>> assetTimeStampDecisionMap = this.mlFinalDecisionWriter.getAssetTimeStampDecisionMap();
-/* 184 */     TradeBookToOrderBookGenerator tradeBookToOrderBookGenerator = 
-/* 185 */       new TradeBookToOrderBookGenerator(sourcePath, destPath, assetTimeStampDecisionMap, this.bias);
-/* 186 */     tradeBookToOrderBookGenerator.generateOrderBooks();
+/* 179 */     this.mlFinalDecisionWriter.closeWriter();
+/* 180 */     ParameterWriter parameterWriter = new ParameterWriter();
+/* 181 */     parameterWriter.createParamDir(sourcePath, destPath, this.mlParameter);
+/* 182 */     HashMap<String, TreeMap<Long, Boolean>> assetTimeStampDecisionMap = this.mlFinalDecisionWriter.getAssetTimeStampDecisionMap();
+/* 183 */     TradeBookToOrderBookGenerator tradeBookToOrderBookGenerator = 
+/* 184 */       new TradeBookToOrderBookGenerator(sourcePath, destPath, assetTimeStampDecisionMap, this.bias);
+/* 185 */     tradeBookToOrderBookGenerator.generateOrderBooks();
 /*     */   }
 /*     */   
 /*     */   private TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlRead(String destPath)
 /*     */     throws IOException
 /*     */   {
-/* 192 */     String fileName = destPath + "/ML/DailyCorrelLog.csv";
+/* 191 */     String fileName = destPath + "/ML/DailyCorrelLog.csv";
 /*     */     
-/* 194 */     TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals = new TreeMap();
+/* 193 */     TreeMap<Long, HashMap<String, HashMap<String, Double>>> correlVals = new TreeMap();
 /*     */     
-/* 196 */     CSVReader reader = new CSVReader(fileName, ',', 0);
+/* 195 */     CSVReader reader = new CSVReader(fileName, ',', 0);
 /*     */     
 /*     */ 
 /*     */ 
-/* 200 */     String[] header1 = reader.getLine();
-/* 201 */     String[] header2 = reader.getLine();
+/* 199 */     String[] header1 = reader.getLine();
+/* 200 */     String[] header2 = reader.getLine();
 /*     */     String[] curLine;
-/* 203 */     while ((curLine = reader.getLine()) != null) {
+/* 202 */     while ((curLine = reader.getLine()) != null) {
 /*     */       String[] curLine;
-/* 205 */       Long date = Long.valueOf(Long.parseLong(curLine[0]));
-/* 206 */       HashMap<String, HashMap<String, Double>> correlMap = new HashMap();
+/* 204 */       Long date = Long.valueOf(Long.parseLong(curLine[0]));
+/* 205 */       HashMap<String, HashMap<String, Double>> correlMap = new HashMap();
 /*     */       
 /*     */ 
-/* 209 */       for (int i = 1; i < curLine.length; i++)
+/* 208 */       for (int i = 1; i < curLine.length; i++)
 /*     */       {
-/* 211 */         String scrip1 = header1[i];
-/* 212 */         String scrip2 = header2[i];
-/* 213 */         Double value = Double.valueOf(Double.parseDouble(curLine[i]));
+/* 210 */         String scrip1 = header1[i];
+/* 211 */         String scrip2 = header2[i];
+/* 212 */         Double value = Double.valueOf(Double.parseDouble(curLine[i]));
 /*     */         
-/* 215 */         HashMap<String, Double> curMap = (HashMap)correlMap.get(scrip1);
-/* 216 */         if (curMap == null) {
-/* 217 */           curMap = new HashMap();
-/* 218 */           curMap.put(scrip2, value);
-/* 219 */           correlMap.put(scrip1, curMap);
+/* 214 */         HashMap<String, Double> curMap = (HashMap)correlMap.get(scrip1);
+/* 215 */         if (curMap == null) {
+/* 216 */           curMap = new HashMap();
+/* 217 */           curMap.put(scrip2, value);
+/* 218 */           correlMap.put(scrip1, curMap);
 /*     */         } else {
-/* 221 */           curMap.put(scrip2, value);
-/* 222 */           correlMap.put(scrip1, curMap);
+/* 220 */           curMap.put(scrip2, value);
+/* 221 */           correlMap.put(scrip1, curMap);
 /*     */         }
 /*     */       }
 /*     */       
 /*     */ 
-/* 227 */       correlVals.put(date, correlMap);
+/* 226 */       correlVals.put(date, correlMap);
 /*     */     }
 /*     */     
-/* 230 */     reader.close();
+/* 229 */     reader.close();
 /*     */     
-/* 232 */     return correlVals;
+/* 231 */     return correlVals;
 /*     */   }
 /*     */   
 /*     */ 
@@ -241,90 +240,58 @@
 /*     */   private void writeMLTradeLog(Long resultDate, HashMap<String, Boolean> result, HashMap<String, Double> mtmList, HashMap<String, Double> modelOutput)
 /*     */     throws IOException
 /*     */   {
-/* 244 */     String[] logData = new String[5];
-/* 245 */     logData[0] = resultDate.toString();
-/* 246 */     label258: for (Map.Entry<String, Boolean> entry : result.entrySet()) {
-/* 247 */       String assetName = (String)entry.getKey();
-/* 248 */       String originalAssetName = assetName;
+/* 243 */     String[] logData = new String[5];
+/* 244 */     logData[0] = resultDate.toString();
+/* 245 */     label258: for (Map.Entry<String, Boolean> entry : result.entrySet()) {
+/* 246 */       String assetName = (String)entry.getKey();
+/* 247 */       String originalAssetName = assetName;
 /*     */       
-/* 250 */       if (this.bias)
-/* 251 */         originalAssetName = assetName.split("#")[1];
+/* 249 */       if (this.bias)
+/* 250 */         originalAssetName = assetName.split("#")[1];
 /*     */       Double mtm;
 /*     */       Double mtm;
-/* 254 */       if (mtmList == null) {
-/* 255 */         mtm = Double.valueOf(0.0D);
-/* 256 */       } else { if (mtmList.get(originalAssetName) == null) {
+/* 253 */       if (mtmList == null) {
+/* 254 */         mtm = Double.valueOf(0.0D);
+/* 255 */       } else { if (mtmList.get(originalAssetName) == null) {
 /*     */           continue;
 /*     */         }
-/* 259 */         mtm = (Double)mtmList.get(originalAssetName);
+/* 258 */         mtm = (Double)mtmList.get(originalAssetName);
 /*     */       }
-/* 261 */       logData[1] = assetName;
-/* 262 */       if (result.get(assetName) != null)
+/* 260 */       logData[1] = assetName;
+/* 261 */       if (result.get(assetName) != null)
 /*     */       {
-/* 264 */         if (!((Boolean)result.get(assetName)).booleanValue()) {
-/* 265 */           logData[4] = "Not Selected";
-/* 266 */         } else if (((Double)modelOutput.get(assetName)).equals(Double.valueOf(100.0D))) {
-/* 267 */           logData[4] = "Running Trade";
-/* 268 */         } else if (this.tsTradedSelectedScripsMap.get(resultDate) == null) {
-/* 269 */           logData[4] = "Selected Not Traded";
-/* 270 */         } else { if (MathLib.doubleCompare(mtm, Double.valueOf(0.0D)).intValue() == 0)
+/* 263 */         if (!((Boolean)result.get(assetName)).booleanValue()) {
+/* 264 */           logData[4] = "Not Selected";
+/* 265 */         } else if (((Double)modelOutput.get(assetName)).equals(Double.valueOf(Double.POSITIVE_INFINITY))) {
+/* 266 */           logData[4] = "Running Trade";
+/* 267 */         } else if (this.tsTradedSelectedScripsMap.get(resultDate) == null) {
+/* 268 */           logData[4] = "Selected Not Traded";
+/* 269 */         } else { if (MathLib.doubleCompare(mtm, Double.valueOf(0.0D)).intValue() == 0)
 /*     */           {
-/* 272 */             if (!((String)this.tsTradedSelectedScripsMap.get(resultDate)).contains(assetName)) {
-/* 273 */               logData[4] = "Selected Not Traded";
+/* 271 */             if (!((String)this.tsTradedSelectedScripsMap.get(resultDate)).contains(assetName)) {
+/* 272 */               logData[4] = "Selected Not Traded";
 /*     */               break label258; } }
-/* 275 */           logData[4] = "Traded";
+/* 274 */           logData[4] = "Traded";
 /*     */         }
-/* 277 */         logData[2] = mtm.toString();
-/* 278 */         logData[3] = ((Double)modelOutput.get(assetName)).toString();
+/* 276 */         logData[2] = mtm.toString();
+/* 277 */         logData[3] = ((Double)modelOutput.get(assetName)).toString();
 /*     */         
-/* 280 */         this.mlLogWriter.writeLine(logData);
+/* 279 */         this.mlLogWriter.writeLine(logData);
 /*     */       }
 /*     */     }
 /*     */   }
 /*     */   
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */ 
-/*     */   private void initMLLogWriter()
-/*     */     throws Exception
+/*     */   private void initMLLogWriter() throws Exception
 /*     */   {
 /*     */     try
 /*     */     {
-/* 321 */       this.mlLogWriter = new CSVWriter(this.mlPath + "\\DailyFilterLog" + ".csv", false, ",");
+/* 288 */       this.mlLogWriter = new CSVWriter(this.mlPath + "\\DailyFilterLog" + ".csv", false, ",");
 /*     */     } catch (IOException e) {
-/* 323 */       System.out.println("ML Error:Error in creating file for logging Daily filter results");
-/* 324 */       throw new IOException();
+/* 290 */       System.out.println("ML Error:Error in creating file for logging Daily filter results");
+/* 291 */       throw new IOException();
 /*     */     }
 /*     */     
-/* 327 */     this.mlLogWriter.write("Date,Asset,Initial MTM,Model Output, Decision\n");
+/* 294 */     this.mlLogWriter.write("Date,Asset,Initial MTM,Model Output, Decision\n");
 /*     */   }
 /*     */   
 /*     */ 
@@ -334,19 +301,19 @@
 /*     */ 
 /*     */   public HashMap<String, DailyDataReader> getDailyReaderCollection()
 /*     */   {
-/* 337 */     return this.dailyReaderCollection;
+/* 304 */     return this.dailyReaderCollection;
 /*     */   }
 /*     */   
 /*     */   public CSVWriter getMlLogWriter() {
-/* 341 */     return this.mlLogWriter;
+/* 308 */     return this.mlLogWriter;
 /*     */   }
 /*     */   
 /*     */   public CSVWriter getCorrelLogWriter() {
-/* 345 */     return this.correlLogWriter.getCorrelLogWriter();
+/* 312 */     return this.correlLogWriter.getCorrelLogWriter();
 /*     */   }
 /*     */   
 /*     */   public HashMap<String, MLAlgo> getAlgorithmMap() {
-/* 349 */     return this.algorithmMap;
+/* 316 */     return this.algorithmMap;
 /*     */   }
 /*     */ }
 
