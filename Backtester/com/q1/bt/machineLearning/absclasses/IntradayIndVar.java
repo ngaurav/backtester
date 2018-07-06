@@ -1,14 +1,14 @@
-/*   */ package com.q1.bt.machineLearning.absclasses;
-/*   */ 
-/*   */ import com.q1.bt.machineLearning.utility.IntradayData;
-/*   */ 
-/*   */ public abstract class IntradayIndVar extends IndVar {
-/*   */   public boolean psuedoDaily;
-/*   */   
-/* 8 */   public IntradayIndVar(FactorType fType, ValueType vType) { super(fType, vType); }
-/*   */   
-/*   */   public abstract void updateInd(IntradayData paramIntradayData);
-/*   */ }
+package com.q1.bt.machineLearning.absclasses;
+
+import com.q1.bt.machineLearning.utility.IntradayData;
+
+public abstract class IntradayIndVar extends IndVar {
+  public boolean psuedoDaily;
+  
+  public IntradayIndVar(FactorType fType, ValueType vType) { super(fType, vType); }
+  
+  public abstract void updateInd(IntradayData paramIntradayData);
+}
 
 
 /* Location:              /Users/ng/Downloads/Backtester v8.15.jar!/com/q1/bt/machineLearning/absclasses/IntradayIndVar.class

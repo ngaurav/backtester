@@ -1,24 +1,24 @@
-/*    */ package com.q1.bt.randomParamSearch.paramDist;
-/*    */ 
-/*    */ import com.q1.bt.randomParamSearch.absClasses.Parameter;
-/*    */ import com.q1.bt.randomParamSearch.enums.DistributionTypes;
-/*    */ import java.util.Random;
-/*    */ 
-/*    */ public class Constant extends Parameter
-/*    */ {
-/*    */   double constant;
-/*    */   
-/*    */   public Constant(double val)
-/*    */   {
-/* 13 */     this.constant = val;
-/* 14 */     this.distribution_type = DistributionTypes.CONSTANT;
-/*    */   }
-/*    */   
-/*    */   public double getNext(Random rand)
-/*    */   {
-/* 19 */     return this.constant;
-/*    */   }
-/*    */ }
+package com.q1.bt.randomParamSearch.paramDist;
+
+import com.q1.bt.randomParamSearch.absClasses.Parameter;
+import com.q1.bt.randomParamSearch.enums.DistributionTypes;
+import java.util.Random;
+
+public class Constant extends Parameter
+{
+  double constant;
+  
+  public Constant(double val)
+  {
+    this.constant = val;
+    this.distribution_type = DistributionTypes.CONSTANT;
+  }
+  
+  public double getNext(Random rand)
+  {
+    return this.constant;
+  }
+}
 
 
 /* Location:              /Users/ng/Downloads/Backtester v8.15.jar!/com/q1/bt/randomParamSearch/paramDist/Constant.class

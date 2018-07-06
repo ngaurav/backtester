@@ -1,25 +1,25 @@
-/*    */ package com.q1.bt.preprocess;
-/*    */ 
-/*    */ import java.util.ArrayList;
-/*    */ 
-/*    */ public abstract class PreprocessAlgo { public ArrayList<String> paramList;
-/*    */   
-/*  7 */   public PreprocessAlgo() { this.paramList = new ArrayList(); }
-/*    */   
-/*    */ 
-/*    */   public String getparamList()
-/*    */   {
-/* 12 */     String paramString = "";
-/* 13 */     for (String param : this.paramList) {
-/* 14 */       paramString = paramString + "_" + param;
-/*    */     }
-/* 16 */     return paramString;
-/*    */   }
-/*    */   
-/*    */   public abstract String getModelPackage();
-/*    */   
-/*    */   public abstract String getModelName();
-/*    */ }
+package com.q1.bt.preprocess;
+
+import java.util.ArrayList;
+
+public abstract class PreprocessAlgo { public ArrayList<String> paramList;
+  
+  public PreprocessAlgo() { this.paramList = new ArrayList(); }
+  
+
+  public String getparamList()
+  {
+    String paramString = "";
+    for (String param : this.paramList) {
+      paramString = paramString + "_" + param;
+    }
+    return paramString;
+  }
+  
+  public abstract String getModelPackage();
+  
+  public abstract String getModelName();
+}
 
 
 /* Location:              /Users/ng/Downloads/Backtester v8.15.jar!/com/q1/bt/preprocess/PreprocessAlgo.class

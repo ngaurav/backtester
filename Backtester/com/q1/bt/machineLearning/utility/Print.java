@@ -1,72 +1,72 @@
-/*    */ package com.q1.bt.machineLearning.utility;
-/*    */ 
-/*    */ import java.util.ArrayList;
-/*    */ 
-/*    */ public class Print {
-/*    */   public static void print1dArray(int[] Array) {
-/*  7 */     for (int i = 0; i < Array.length; i++) {
-/*  8 */       System.out.print("," + Array[i]);
-/*    */     }
-/* 10 */     System.out.println();
-/*    */   }
-/*    */   
-/*    */   public static void print1dArray(double[] Array)
-/*    */   {
-/* 15 */     for (int i = 0; i < Array.length; i++) {
-/* 16 */       System.out.print("," + Array[i]);
-/*    */     }
-/* 18 */     System.out.println();
-/*    */   }
-/*    */   
-/*    */   public static void print1dArray(String[] Array)
-/*    */   {
-/* 23 */     for (int i = 0; i < Array.length; i++) {
-/* 24 */       System.out.print("," + Array[i]);
-/*    */     }
-/* 26 */     System.out.println();
-/*    */   }
-/*    */   
-/*    */   public static void printMat(ArrayList<ArrayList<Double>> covarMat)
-/*    */   {
-/* 31 */     int row = covarMat.size();
-/*    */     
-/* 33 */     for (int i = 0; i < row; i++) {
-/* 34 */       for (int j = 0; j < ((ArrayList)covarMat.get(i)).size(); j++) {
-/* 35 */         System.out.print("," + ((ArrayList)covarMat.get(i)).get(j));
-/*    */       }
-/* 37 */       System.out.println();
-/*    */     }
-/*    */   }
-/*    */   
-/* 41 */   public static void printMat(double[][] covarMat) { int row = covarMat.length;
-/* 42 */     int col = covarMat[0].length;
-/*    */     
-/* 44 */     for (int i = 0; i < row; i++) {
-/* 45 */       for (int j = 0; j < col; j++) {
-/* 46 */         System.out.print("," + covarMat[i][j]);
-/*    */       }
-/* 48 */       System.out.println();
-/*    */     }
-/*    */   }
-/*    */   
-/*    */   public static void print2DArrWithHeaders(ArrayList<Long> colNames, ArrayList<String> rowNames, ArrayList<ArrayList<Double>> elements)
-/*    */   {
-/* 54 */     for (Object o : colNames) {
-/* 55 */       System.out.print("," + o.toString());
-/*    */     }
-/* 57 */     System.out.println();
-/* 58 */     for (int i = 0; i < elements.size(); i++) {
-/* 59 */       System.out.print((String)rowNames.get(i));
-/* 60 */       for (int j = 0; j < ((ArrayList)elements.get(i)).size(); j++) {
-/* 61 */         if (((ArrayList)elements.get(i)).get(j) == null) {
-/* 62 */           System.out.print(",null");
-/*    */         } else
-/* 64 */           System.out.print("," + ((Double)((ArrayList)elements.get(i)).get(j)).toString());
-/*    */       }
-/* 66 */       System.out.println();
-/*    */     }
-/*    */   }
-/*    */ }
+package com.q1.bt.machineLearning.utility;
+
+import java.util.ArrayList;
+
+public class Print {
+  public static void print1dArray(int[] Array) {
+    for (int i = 0; i < Array.length; i++) {
+      System.out.print("," + Array[i]);
+    }
+    System.out.println();
+  }
+  
+  public static void print1dArray(double[] Array)
+  {
+    for (int i = 0; i < Array.length; i++) {
+      System.out.print("," + Array[i]);
+    }
+    System.out.println();
+  }
+  
+  public static void print1dArray(String[] Array)
+  {
+    for (int i = 0; i < Array.length; i++) {
+      System.out.print("," + Array[i]);
+    }
+    System.out.println();
+  }
+  
+  public static void printMat(ArrayList<ArrayList<Double>> covarMat)
+  {
+    int row = covarMat.size();
+    
+    for (int i = 0; i < row; i++) {
+      for (int j = 0; j < ((ArrayList)covarMat.get(i)).size(); j++) {
+        System.out.print("," + ((ArrayList)covarMat.get(i)).get(j));
+      }
+      System.out.println();
+    }
+  }
+  
+  public static void printMat(double[][] covarMat) { int row = covarMat.length;
+    int col = covarMat[0].length;
+    
+    for (int i = 0; i < row; i++) {
+      for (int j = 0; j < col; j++) {
+        System.out.print("," + covarMat[i][j]);
+      }
+      System.out.println();
+    }
+  }
+  
+  public static void print2DArrWithHeaders(ArrayList<Long> colNames, ArrayList<String> rowNames, ArrayList<ArrayList<Double>> elements)
+  {
+    for (Object o : colNames) {
+      System.out.print("," + o.toString());
+    }
+    System.out.println();
+    for (int i = 0; i < elements.size(); i++) {
+      System.out.print((String)rowNames.get(i));
+      for (int j = 0; j < ((ArrayList)elements.get(i)).size(); j++) {
+        if (((ArrayList)elements.get(i)).get(j) == null) {
+          System.out.print(",null");
+        } else
+          System.out.print("," + ((Double)((ArrayList)elements.get(i)).get(j)).toString());
+      }
+      System.out.println();
+    }
+  }
+}
 
 
 /* Location:              /Users/ng/Downloads/Backtester v8.15.jar!/com/q1/bt/machineLearning/utility/Print.class
